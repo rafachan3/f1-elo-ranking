@@ -1,17 +1,12 @@
 import pandas as pd
 from itertools import combinations
-import numpy as np
 from driver import Driver
 from elo_calculator import EloCalculator
 
 class F1DataProcessor:
     def __init__(self):
-        self.calculator = EloCalculator()
-        self.ratings = {}
-        self.driver_race_counts = {}
-        self.rating_histories = {}
-        self.driver_first_year = {}
-        self.driver_last_year = {}
+        self.elo_calculator = EloCalculator()
+        self.drivers_dict = {}
         self.status_mapping = {}
         
     def load_data(self, data_path='./data'):
@@ -25,8 +20,11 @@ class F1DataProcessor:
         self.status = pd.read_csv(f'{data_path}/status.csv')
 
         self.races = self.races[self.races['name'] != 'Indianapolis 500']
-        self.ratings = {driver_id: self.calculator.BASE_ELO for driver_id in self.drivers['driverId']}
-        self.rating_histories = {driver_id: [] for driver_id in self.drivers['driverId']}
+        
+        # Initialize driver objects
+        for driver_id in self.drivers['driverId']:
+            self.drivers_dict[driver_id] = Driver(driver_id, self.elo_calculator.BASE_ELO)
+            
         self.status_mapping = dict(zip(self.status['statusId'], self.status['status']))
 
     def process_races(self):
@@ -54,20 +52,19 @@ class F1DataProcessor:
                     continue
 
                 for driver_id in group['driverId']:
-                    self.driver_race_counts[driver_id] = self.driver_race_counts.get(driver_id, 0) + 1
-                    if driver_id not in self.driver_first_year:
-                        self.driver_first_year[driver_id] = race_year
-                    self.driver_last_year[driver_id] = race_year
+                    driver = self.drivers_dict[driver_id]
+                    driver.increment_race_count()
+                    driver.update_years(race_year)
 
                 for row_a, row_b in combinations(group.itertuples(index=False), 2):
                     self._process_driver_pair(row_a, row_b, race_year)
 
     def _process_driver_pair(self, row_a, row_b, race_year):
-        driver_a, driver_b = row_a.driverId, row_b.driverId
-        rating_a, rating_b = self.ratings[driver_a], self.ratings[driver_b]
+        driver_a = self.drivers_dict[row_a.driverId]
+        driver_b = self.drivers_dict[row_b.driverId]
 
-        k_factor_a = self.calculator.calculate_k_factor(self.driver_race_counts[driver_a], race_year)
-        k_factor_b = self.calculator.calculate_k_factor(self.driver_race_counts[driver_b], race_year)
+        k_factor_a = self.elo_calculator.calculate_k_factor(driver_a.race_count, race_year)
+        k_factor_b = self.elo_calculator.calculate_k_factor(driver_b.race_count, race_year)
 
         status_a = self.status_mapping[row_a.statusId]
         status_b = self.status_mapping[row_b.statusId]
@@ -86,38 +83,29 @@ class F1DataProcessor:
             actual_score_a = 1 if row_a.positionOrder < row_b.positionOrder else 0
             actual_score_b = 1 - actual_score_a
 
-        expected_a = self.calculator.calculate_expected_score(rating_a, rating_b)
+        expected_a = self.elo_calculator.calculate_expected_score(driver_a.rating, driver_b.rating)
         expected_b = 1 - expected_a
 
         race_weight = getattr(row_a, 'weight', 1.0)
         weighted_k_a = k_factor_a * race_weight
         weighted_k_b = k_factor_b * race_weight
 
-        new_rating_a = self.calculator.update_elo(rating_a, expected_a, actual_score_a, weighted_k_a)
-        new_rating_b = self.calculator.update_elo(rating_b, expected_b, actual_score_b, weighted_k_b)
+        new_rating_a = self.elo_calculator.update_elo(driver_a.rating, expected_a, actual_score_a, weighted_k_a)
+        new_rating_b = self.elo_calculator.update_elo(driver_b.rating, expected_b, actual_score_b, weighted_k_b)
 
-        self.rating_histories[driver_a].append(new_rating_a)
-        self.rating_histories[driver_b].append(new_rating_b)
-
-        self.ratings[driver_a] = new_rating_a
-        self.ratings[driver_b] = new_rating_b
+        driver_a.update_rating(new_rating_a)
+        driver_b.update_rating(new_rating_b)
 
     def calculate_rankings(self):
         final_stats = []
         confidence_widths = []
 
-        for driver_id, rating in self.ratings.items():
-            n_races = self.driver_race_counts.get(driver_id, 0)
-            if n_races == 0:
+        # Calculate confidence widths first
+        for driver in self.drivers_dict.values():
+            if driver.race_count == 0:
                 continue
 
-            rating_history = self.rating_histories[driver_id]
-            rating_volatility = np.std(rating_history) if len(rating_history) > 1 else 0
-            year_span = (self.driver_last_year.get(driver_id, 2024) - 
-                        self.driver_first_year.get(driver_id, 2024))
-
-            lower_bound, upper_bound = self.calculator.calculate_confidence_interval(
-                rating, n_races, rating_volatility, year_span)
+            lower_bound, upper_bound = driver.get_confidence_interval(self.elo_calculator)
             confidence_widths.append(upper_bound - lower_bound)
 
         min_width = min(confidence_widths)
@@ -139,39 +127,24 @@ class F1DataProcessor:
             elif score >= 20: return 'D'
             else: return 'F'
 
-        for driver_id, rating in self.ratings.items():
-            n_races = self.driver_race_counts.get(driver_id, 0)
-            if n_races == 0:
+        # Generate final statistics
+        for driver in self.drivers_dict.values():
+            if driver.race_count == 0:
                 continue
 
-            rating_history = self.rating_histories[driver_id]
-            rating_volatility = np.std(rating_history) if len(rating_history) > 1 else 0
-            year_span = (self.driver_last_year.get(driver_id, 2024) - 
-                        self.driver_first_year.get(driver_id, 2024))
-
-            lower_bound, upper_bound = self.calculator.calculate_confidence_interval(
-                rating, n_races, rating_volatility, year_span)
-
+            lower_bound, upper_bound = driver.get_confidence_interval(self.elo_calculator)
             width = upper_bound - lower_bound
             confidence_score = calculate_confidence_score(width)
             confidence_grade = get_confidence_grade(confidence_score)
 
-            final_stats.append({
-                'Driver': f"{self.drivers[self.drivers['driverId'] == driver_id]['forename'].iloc[0]} "
-                         f"{self.drivers[self.drivers['driverId'] == driver_id]['surname'].iloc[0]}",
-                'Elo Rating': rating,
-                'Lower Bound': round(lower_bound, 1),
-                'Upper Bound': round(upper_bound, 1),
-                'Confidence Score': confidence_score,
-                'Reliability Grade': confidence_grade,
-                'Race Count': n_races,
-                'Rating Volatility': round(rating_volatility, 1),
-                'Is Established': n_races >= self.calculator.MIN_RACES_FOR_ESTABLISHED,
-                'First Year': self.driver_first_year.get(driver_id),
-                'Last Year': self.driver_last_year.get(driver_id),
-                'Career Span': year_span
-            })
+            final_stats.append(
+                driver.to_stats_dict(
+                    self.elo_calculator,
+                    self.drivers,
+                    confidence_score,
+                    confidence_grade
+                )
+            )
 
         rankings_df = pd.DataFrame(final_stats)
         return rankings_df.sort_values('Elo Rating', ascending=False)
-    
