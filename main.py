@@ -29,41 +29,52 @@ def update_elo(rating, expected, actual, k_factor):
     """Update Elo rating based on expected and actual results."""
     return rating + k_factor * (actual - expected)
 
-def process_indianapolis_500(race_data, races_df):
+def process_special_races(race_data, races_df, race_id):
     """
-    Special handling for Indianapolis 500 races
+    Special handling for various race scenarios
     Returns modified race data with adjusted driver participations
     """
-    if race_data.empty:
-        return race_data
-
-    try:
-        # Get the race ID from race_data
-        race_id = race_data['raceId'].iloc[0]
-        
-        # Filter the races DataFrame
-        race_info = races_df[races_df['raceId'] == race_id]
-        
-        if race_info.empty:
-            print(f"Warning: Race ID {race_id} not found in races data")
-            return race_data
-            
-        if race_info['name'].iloc[0] == 'Indianapolis 500':
-            # Group by car (identified by grid position) to handle driver swaps
-            race_data = race_data.groupby('grid').agg({
-                'driverId': 'first',  # Take primary driver
-                'constructorId': 'first',
-                'positionOrder': 'min',  # Best position achieved by any driver in the car
-                'statusId': 'last'  # Final status
-            }).reset_index()
-            
-    except Exception as e:
-        print(f"Error processing race data: {e}")
-        
+    race_info = races_df[races_df['raceId'] == race_id].iloc[0]
+    race_year = race_info['year']
+    race_name = race_info['name']
+    
+    # Create weight column
+    race_data = race_data.copy()
+    race_data['weight'] = 1.0
+    
+    # Indianapolis 500 handling
+    if race_name == 'Indianapolis 500':
+        race_data = handle_shared_drives(race_data)
+    
+    # Pre-qualifying era (1989-1992)
+    elif 1989 <= race_year <= 1992:
+        # Only consider drivers who made the actual race
+        race_data = race_data[race_data['grid'] > 0]
+    
+    # Shared drives era (pre-1970)
+    elif race_year < 1970:
+        race_data = handle_shared_drives(race_data)
+    
+    # Special shortened races
+    elif (race_year == 1976 and race_name == 'Japanese Grand Prix') or \
+         (race_year == 1991 and race_name == 'Australian Grand Prix') or \
+         (race_year == 2009 and race_name == 'Malaysian Grand Prix') or \
+         (race_year == 2021 and race_name == 'Belgian Grand Prix'):
+        race_data['weight'] = 0.5
+    
     return race_data
 
-# Initialize driver race counts for K-factor calculation
-driver_race_counts = {}
+def handle_shared_drives(race_data):
+    """
+    Handle races where multiple drivers shared the same car
+    """
+    return race_data.groupby('grid').agg({
+        'driverId': 'first',  # Take primary driver
+        'constructorId': 'first',
+        'positionOrder': 'min',  # Best position achieved
+        'statusId': 'last',  # Final status
+        'weight': 'first'  # Maintain weight
+    }).reset_index()
 
 def main():
     # Load datasets
@@ -79,6 +90,9 @@ def main():
     # Initialize ratings dictionary
     ratings = {driver_id: BASE_ELO for driver_id in drivers['driverId']}
 
+    # Initialize driver race counts for K-factor calculation
+    driver_race_counts = {}
+
     # Create status mapping
     status_mapping = dict(zip(status['statusId'], status['status']))
 
@@ -92,8 +106,8 @@ def main():
         race_year = races_sorted[races_sorted['raceId'] == race_id]['year'].iloc[0]
         race_data = race_results[race_results['raceId'] == race_id]
 
-        # Special handling for Indianapolis 500
-        race_data = process_indianapolis_500(race_data, races_sorted)
+        # Apply special race handling
+        race_data = process_special_races(race_data, races_sorted, race_id)
 
         # Group by constructor to find teammates
         for constructor_id, group in race_data.groupby('constructorId'):
@@ -144,6 +158,14 @@ def main():
                 ratings[driver_a] = update_elo(rating_a, expected_a, actual_score_a, k_factor_a)
                 ratings[driver_b] = update_elo(rating_b, expected_b, actual_score_b, k_factor_b)
 
+                # Get race weight and update ratings
+                race_weight = getattr(row_a, 'weight', 1.0)
+                weighted_k_a = k_factor_a * race_weight
+                weighted_k_b = k_factor_b * race_weight
+                
+                ratings[driver_a] = update_elo(rating_a, expected_a, actual_score_a, weighted_k_a)
+                ratings[driver_b] = update_elo(rating_b, expected_b, actual_score_b, weighted_k_b)
+                
     # Combine driver names
     drivers['fullName'] = drivers['forename'] + ' ' + drivers['surname']
     driver_names = dict(zip(drivers['driverId'], drivers['fullName']))
