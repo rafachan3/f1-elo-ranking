@@ -34,20 +34,20 @@ class Driver:
             return self.last_year - self.first_year
         return 0
 
-    def get_confidence_interval(self, calculator):
+    def get_confidence_interval(self, confidence_calculator):
         """Calculate confidence interval using provided calculator"""
         rating_volatility = self.get_rating_volatility()
         year_span = self.get_career_span()
-        return calculator.calculate_confidence_interval(
+        return confidence_calculator.calculate_confidence_interval(
             self.rating, 
             self.race_count, 
             rating_volatility, 
             year_span
         )
 
-    def to_stats_dict(self, calculator, drivers_df, confidence_score, confidence_grade):
+    def to_stats_dict(self, calculator, confidence_calculator, drivers_df, confidence_score, confidence_grade):
         """Convert driver data to statistics dictionary"""
-        lower_bound, upper_bound = self.get_confidence_interval(calculator)
+        lower_bound, upper_bound = self.get_confidence_interval(confidence_calculator)
         driver_info = drivers_df[drivers_df['driverId'] == self.driver_id].iloc[0]
         
         return {

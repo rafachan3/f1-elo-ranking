@@ -2,10 +2,12 @@ import pandas as pd
 from itertools import combinations
 from driver import Driver
 from elo_calculator import EloCalculator
+from confidence_calculator import ConfidenceCalculator
 
 class F1DataProcessor:
     def __init__(self):
         self.elo_calculator = EloCalculator()
+        self.confidence_calculator = ConfidenceCalculator()
         self.drivers_dict = {}
         self.status_mapping = {}
         
@@ -105,41 +107,26 @@ class F1DataProcessor:
             if driver.race_count == 0:
                 continue
 
-            lower_bound, upper_bound = driver.get_confidence_interval(self.elo_calculator)
+            lower_bound, upper_bound = driver.get_confidence_interval(self.confidence_calculator)
             confidence_widths.append(upper_bound - lower_bound)
-
+            
         min_width = min(confidence_widths)
         max_width = max(confidence_widths)
-        width_range = max_width - min_width
-
-        def calculate_confidence_score(width):
-            normalized_width = (max_width - width) / width_range
-            return round(normalized_width * 100)
-
-        def get_confidence_grade(score):
-            if score >= 90: return 'A+'
-            elif score >= 80: return 'A'
-            elif score >= 70: return 'B+'
-            elif score >= 60: return 'B'
-            elif score >= 50: return 'C+'
-            elif score >= 40: return 'C'
-            elif score >= 30: return 'D+'
-            elif score >= 20: return 'D'
-            else: return 'F'
 
         # Generate final statistics
         for driver in self.drivers_dict.values():
             if driver.race_count == 0:
                 continue
 
-            lower_bound, upper_bound = driver.get_confidence_interval(self.elo_calculator)
+            lower_bound, upper_bound = driver.get_confidence_interval(self.confidence_calculator)
             width = upper_bound - lower_bound
-            confidence_score = calculate_confidence_score(width)
-            confidence_grade = get_confidence_grade(confidence_score)
+            confidence_score = self.confidence_calculator.calculate_confidence_score(width, max_width, min_width)
+            confidence_grade = self.confidence_calculator.get_confidence_grade(confidence_score)
 
             final_stats.append(
                 driver.to_stats_dict(
                     self.elo_calculator,
+                    self.confidence_calculator,
                     self.drivers,
                     confidence_score,
                     confidence_grade
