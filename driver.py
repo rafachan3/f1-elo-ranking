@@ -45,6 +45,16 @@ class Driver:
             year_span
         )
 
+    def get_flag_level(self):
+        if self.race_count < 10:
+            return 'Rookie'
+        elif 10 <= self.race_count < 20:
+            return 'Developing'
+        elif 20 <= self.race_count < 50:
+            return 'Established'
+        else:
+            return 'Veteran'
+
     def to_stats_dict(self, calculator, confidence_calculator, drivers_df, confidence_score, confidence_grade):
         """Convert driver data to statistics dictionary"""
         lower_bound, upper_bound = self.get_confidence_interval(confidence_calculator)
@@ -62,5 +72,6 @@ class Driver:
             'Is Established': self.race_count >= calculator.MIN_RACES_FOR_ESTABLISHED,
             'First Year': self.first_year,
             'Last Year': self.last_year,
-            'Career Span': self.get_career_span()
+            'Career Span': self.get_career_span(),
+            'Flag Level': self.get_flag_level()  # Add flag level to stats dict
         }
