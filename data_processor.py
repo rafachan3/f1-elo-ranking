@@ -10,6 +10,27 @@ class F1DataProcessor:
         self.confidence_calculator = ConfidenceCalculator()
         self.drivers_dict = {}
         self.status_mapping = {}
+
+
+        # Define absolute non-start status IDs
+        self.non_start_status_ids = {
+            73,  # Injured
+            77,  # 107% Rule
+            81,  # Did not qualify
+            82,  # Injury
+            89,  # Safety concerns before race
+            96,  # Excluded before race
+            97,  # Did not prequalify
+            104  # Fatal accident
+        }
+
+        # Define withdrawal status ID
+        self.withdrawal_status_ids = {
+            54,  # Withdrew
+        }
+
+        # Define Indianapolis 500 race IDs
+        self.indy_500_race_ids = {748, 757, 768, 778, 786, 794, 800, 809, 818, 826, 835}
         
     def load_data(self, data_path='./data'):
         self.circuits = pd.read_csv(f'{data_path}/circuits.csv')
@@ -31,32 +52,54 @@ class F1DataProcessor:
 
     def process_races(self):
         races_sorted = self.races.sort_values(by=["year", "round"])
-        race_results = self.results[['raceId', 'driverId', 'constructorId', 'positionOrder', 'statusId', 'grid']]
+        race_results = self.results[['raceId', 'driverId', 'constructorId', 'positionOrder', 'statusId', 'grid', 'position', 'laps']]
 
         for race_id in races_sorted["raceId"]:
             race_year = races_sorted[races_sorted['raceId'] == race_id]['year'].iloc[0]
-            
-            if race_id not in self.races['raceId'].values:
+            race_name = races_sorted[races_sorted['raceId'] == race_id]['name'].iloc[0]
+                
+            # Filter out Indianapolis 500 races using specific raceIds
+            if race_id in self.indy_500_race_ids:
                 continue
 
             race_data = race_results[race_results['raceId'] == race_id].copy()
             race_data['weight'] = 1.0
 
             # Special handling for shortened races
-            if ((race_year == 1976 and races_sorted[races_sorted['raceId'] == race_id]['name'].iloc[0] == 'Japanese Grand Prix') or
-                (race_year == 1991 and races_sorted[races_sorted['raceId'] == race_id]['name'].iloc[0] == 'Australian Grand Prix') or
-                (race_year == 2009 and races_sorted[races_sorted['raceId'] == race_id]['name'].iloc[0] == 'Malaysian Grand Prix') or
-                (race_year == 2021 and races_sorted[races_sorted['raceId'] == race_id]['name'].iloc[0] == 'Belgian Grand Prix')):
+            if ((race_year == 1976 and race_name == 'Japanese Grand Prix') or
+                (race_year == 1991 and race_name == 'Australian Grand Prix') or
+                (race_year == 2009 and race_name == 'Malaysian Grand Prix') or
+                (race_year == 2021 and race_name == 'Belgian Grand Prix')):
                 race_data['weight'] = 0.5
 
-            for constructor_id, group in race_data.groupby('constructorId'):
-                if len(group) < 2:
-                    continue
+            # First filter out definite non-starts
+            race_data = race_data[~race_data['statusId'].isin(self.non_start_status_ids)]
 
-                for driver_id in group['driverId']:
+            # Handle withdrawals based on era and circumstances
+            withdrawal_mask = race_data['statusId'].isin(self.withdrawal_status_ids)
+            if withdrawal_mask.any():
+                era_adjustments = (
+                    # Pre-1970s withdrawals with grid position likely mean race start
+                    ((race_year < 1970) & (race_data['grid'] > 0)) |
+                    # In modern era, must have completed at least one lap to count
+                    ((race_year >= 1970) & (race_data['laps'] > 0))
+                )
+                race_data = race_data[~withdrawal_mask | era_adjustments]
+                
+            # Increment race count for ALL drivers in this race
+            processed_drivers = set()
+            for _, row in race_data.iterrows():
+                driver_id = row['driverId']
+                if driver_id not in processed_drivers:
                     driver = self.drivers_dict[driver_id]
                     driver.increment_race_count()
                     driver.update_years(race_year)
+                    processed_drivers.add(driver_id)
+
+            # Do teammate comparisons only where possible
+            for constructor_id, group in race_data.groupby('constructorId'):
+                if len(group) < 2:
+                    continue  # Only skips teammate comparison, not race counting
 
                 for row_a, row_b in combinations(group.itertuples(index=False), 2):
                     self._process_driver_pair(row_a, row_b, race_year)
@@ -109,7 +152,7 @@ class F1DataProcessor:
 
             lower_bound, upper_bound = driver.get_confidence_interval(self.confidence_calculator)
             confidence_widths.append(upper_bound - lower_bound)
-            
+
         min_width = min(confidence_widths)
         max_width = max(confidence_widths)
 
