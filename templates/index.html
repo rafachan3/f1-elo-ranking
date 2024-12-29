@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Driver Elo Rankings</title>
+</head>
+<body>
+    <h1>F1 Driver E Rankings</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Driver</th>
+                <th>Experience Level</th>
+                <th>Elo Rating</th>
+                <th>Lower Bound</th>
+                <th>Upper Bound</th>
+                <th>Confidence Score</th>
+                <th>Reliability Grade</th>
+                <th>Rating Volatility</th>
+                <th>Race Count</th>
+                <th>First Year</th>
+                <th>Last Year</th>
+                <th>Career Span</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for driver in drivers %}
+            <tr>
+                <td>{{ driver.driver }}</td>
+                <td>{{ driver.flag_level }}</td>
+                <td>{{ driver.elo_rating }}</td>
+                <td>{{ driver.lower_bound }}</td>
+                <td>{{ driver.upper_bound }}</td>
+                <td>{{ driver.confidence_score }}</td>
+                <td>{{ driver.reliability_grade }}</td>
+                <td>{{ driver.rating_volatility }}</td>
+                <td>{{ driver.race_count }}</td>
+                <td>{{ driver.first_year }}</td>
+                <td>{{ driver.last_year }}</td>
+                <td>{{ driver.career_span }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
