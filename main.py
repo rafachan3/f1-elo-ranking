@@ -30,8 +30,8 @@ class DriverEloRanking(db.Model):
     career_span = db.Column(db.Integer, nullable=False)
     flag_level = db.Column(db.String(50), nullable=False)
 
-@app.route('/')
-def home():
+@app.route('/rankings')
+def complete_rankings():
     # Get filter parameters from request
     experience_filter = request.args.get('experience')
     reliability_filter = request.args.get('reliability', '').replace(' ', '+')  # Replace space with + to handle URL encoding
@@ -80,7 +80,7 @@ def home():
     ).first()
 
     return render_template(
-        "index.html",
+        "rankings.html",
         drivers=query.order_by(DriverEloRanking.elo_rating.desc()).all(),
         experiences=experiences,
         reliability_grades=reliability_grades,
