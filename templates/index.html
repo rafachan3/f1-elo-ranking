@@ -2,81 +2,93 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="display-4 mb-4">F1 Driver Elo Rankings</h1>
+    <h1 class="display-4 mb-4">All-Time F1 Driver Elo Rankings</h1>
     
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" action="{{ url_for('home') }}" id="filterForm">
+                <div class="row g-3">
+                    <!-- Search -->
+                    <div class="col-md-4">
+                        <label class="form-label">Search Driver</label>
+                        <input type="text" name="search" class="form-control" value="{{ filters.search }}" placeholder="Enter driver name...">
+                    </div>
+
+                    <!-- Experience Level -->
+                    <div class="col-md-4">
+                        <label class="form-label">Experience Level</label>
+                        <select name="experience" class="form-select">
+                            <option value="">All Levels</option>
+                            {% for exp in experiences %}
+                            <option value="{{ exp }}" {% if filters.experience == exp %}selected{% endif %}>{{ exp }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Reliability Grade -->
+                    <div class="col-md-4">
+                        <label class="form-label">Reliability Grade</label>
+                        <select name="reliability" class="form-select">
+                            <option value="">All Grades</option>
+                            {% for grade in reliability_grades %}
+                                <option value="{{ grade }}" {% if filters.reliability == grade %}selected{% endif %}>{{ grade }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Elo Rating Range -->
+                    <div class="col-md-3">
+                        <label class="form-label">Min Elo Rating</label>
+                        <input type="number" name="min_elo" class="form-control" value="{{ filters.min_elo }}" step="0.1">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Max Elo Rating</label>
+                        <input type="number" name="max_elo" class="form-control" value="{{ filters.max_elo }}" step="0.1">
+                    </div>
+
+                    <!-- Year Range -->
+                    <div class="col-md-3">
+                        <label class="form-label">From Year</label>
+                        <input type="number" name="year_from" class="form-control" 
+                               value="{{ filters.year_from }}"
+                               min="{{ year_range[0] }}" max="{{ year_range[1] }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">To Year</label>
+                        <input type="number" name="year_to" class="form-control" 
+                               value="{{ filters.year_to }}"
+                               min="{{ year_range[0] }}" max="{{ year_range[1] }}">
+                    </div>
+
+                    <!-- Filter Buttons -->
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        <a href="{{ url_for('home') }}" class="btn btn-secondary">Clear Filters</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Count -->
+    <p class="text-muted mb-3">Showing {{ drivers|length }} drivers</p>
+
+    <!-- Table Section -->
     <div class="table-responsive">
-        <table class="table table-hover table-striped align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th scope="col">Driver</th>
-                    <th scope="col">Experience</th>
-                    <th scope="col">Elo Rating</th>
-                    <th scope="col">Lower Bound</th>
-                    <th scope="col">Upper Bound</th>
-                    <th scope="col">Confidence</th>
-                    <th scope="col">Reliability</th>
-                    <th scope="col">Volatility</th>
-                    <th scope="col">Races</th>
-                    <th scope="col">First Year</th>
-                    <th scope="col">Last Year</th>
-                    <th scope="col">Career Span</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for driver in drivers %}
-                <tr>
-                    <td class="fw-bold">{{ driver.driver }}</td>
-                    <td>
-                        {% if driver.flag_level == 'Rookie' %}
-                            <span class="badge bg-success">{{ driver.flag_level }}</span>
-                        {% elif driver.flag_level == 'Developing' %}
-                            <span class="badge bg-info">{{ driver.flag_level }}</span>
-                        {% elif driver.flag_level == 'Established' %}
-                            <span class="badge bg-primary">{{ driver.flag_level }}</span>
-                        {% elif driver.flag_level == 'Veteran' %}
-                            <span class="badge bg-warning text-dark">{{ driver.flag_level }}</span>
-                        {% elif driver.flag_level == 'Legend' %}
-                            <span class="badge bg-danger">{{ driver.flag_level }}</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ driver.flag_level }}</span>
-                        {% endif %}
-                    </td>
-                    <td class="fw-bold">{{ driver.elo_rating }}</td>
-                    <td>{{ driver.lower_bound }}</td>
-                    <td>{{ driver.upper_bound }}</td>
-                    <td>{{ driver.confidence_score }}</td>
-                    <td>
-                        {% if driver.reliability_grade == 'A+' %}
-                            <span class="badge reliability-grade grade-a-plus">A+</span>
-                        {% elif driver.reliability_grade == 'A' %}
-                            <span class="badge reliability-grade grade-a">A</span>
-                        {% elif driver.reliability_grade == 'B+' %}
-                            <span class="badge reliability-grade grade-b-plus">B+</span>
-                        {% elif driver.reliability_grade == 'B' %}
-                            <span class="badge reliability-grade grade-b">B</span>
-                        {% elif driver.reliability_grade == 'C+' %}
-                            <span class="badge reliability-grade grade-c-plus">C+</span>
-                        {% elif driver.reliability_grade == 'C' %}
-                            <span class="badge reliability-grade grade-c">C</span>
-                        {% elif driver.reliability_grade == 'D+' %}
-                            <span class="badge reliability-grade grade-d-plus">D+</span>
-                        {% elif driver.reliability_grade == 'D' %}
-                            <span class="badge reliability-grade grade-d">D</span>
-                        {% elif driver.reliability_grade == 'F' %}
-                            <span class="badge reliability-grade grade-f">F</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ driver.reliability_grade }}</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ driver.rating_volatility }}</td>
-                    <td>{{ driver.race_count }}</td>
-                    <td>{{ driver.first_year }}</td>
-                    <td>{{ driver.last_year }}</td>
-                    <td>{{ driver.career_span }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        {% include '_drivers_table.html' %}
     </div>
 </div>
+
+<!-- JavaScript for real-time filtering -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when select fields change
+    document.querySelectorAll('select').forEach(select => {
+        select.addEventListener('change', () => {
+            document.getElementById('filterForm').submit();
+        });
+    });
+});
+</script>
 {% endblock %}
