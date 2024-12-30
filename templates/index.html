@@ -1,47 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F1 Driver Elo Rankings</title>
-</head>
-<body>
-    <h1>F1 Driver E Rankings</h1>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Driver</th>
-                <th>Experience Level</th>
-                <th>Elo Rating</th>
-                <th>Lower Bound</th>
-                <th>Upper Bound</th>
-                <th>Confidence Score</th>
-                <th>Reliability Grade</th>
-                <th>Rating Volatility</th>
-                <th>Race Count</th>
-                <th>First Year</th>
-                <th>Last Year</th>
-                <th>Career Span</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for driver in drivers %}
-            <tr>
-                <td>{{ driver.driver }}</td>
-                <td>{{ driver.flag_level }}</td>
-                <td>{{ driver.elo_rating }}</td>
-                <td>{{ driver.lower_bound }}</td>
-                <td>{{ driver.upper_bound }}</td>
-                <td>{{ driver.confidence_score }}</td>
-                <td>{{ driver.reliability_grade }}</td>
-                <td>{{ driver.rating_volatility }}</td>
-                <td>{{ driver.race_count }}</td>
-                <td>{{ driver.first_year }}</td>
-                <td>{{ driver.last_year }}</td>
-                <td>{{ driver.career_span }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="display-4 mb-4">F1 Driver Elo Rankings</h1>
+    
+    <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Driver</th>
+                    <th scope="col">Experience</th>
+                    <th scope="col">Elo Rating</th>
+                    <th scope="col">Lower Bound</th>
+                    <th scope="col">Upper Bound</th>
+                    <th scope="col">Confidence</th>
+                    <th scope="col">Reliability</th>
+                    <th scope="col">Volatility</th>
+                    <th scope="col">Races</th>
+                    <th scope="col">First Year</th>
+                    <th scope="col">Last Year</th>
+                    <th scope="col">Career Span</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for driver in drivers %}
+                <tr>
+                    <td class="fw-bold">{{ driver.driver }}</td>
+                    <td>
+                        {% if driver.flag_level == 'Rookie' %}
+                            <span class="badge bg-success">{{ driver.flag_level }}</span>
+                        {% elif driver.flag_level == 'Developing' %}
+                            <span class="badge bg-info">{{ driver.flag_level }}</span>
+                        {% elif driver.flag_level == 'Established' %}
+                            <span class="badge bg-primary">{{ driver.flag_level }}</span>
+                        {% elif driver.flag_level == 'Veteran' %}
+                            <span class="badge bg-warning text-dark">{{ driver.flag_level }}</span>
+                        {% elif driver.flag_level == 'Legend' %}
+                            <span class="badge bg-danger">{{ driver.flag_level }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ driver.flag_level }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold">{{ driver.elo_rating }}</td>
+                    <td>{{ driver.lower_bound }}</td>
+                    <td>{{ driver.upper_bound }}</td>
+                    <td>{{ driver.confidence_score }}</td>
+                    <td>
+                        {% if driver.reliability_grade == 'A+' %}
+                            <span class="badge reliability-grade grade-a-plus">A+</span>
+                        {% elif driver.reliability_grade == 'A' %}
+                            <span class="badge reliability-grade grade-a">A</span>
+                        {% elif driver.reliability_grade == 'B+' %}
+                            <span class="badge reliability-grade grade-b-plus">B+</span>
+                        {% elif driver.reliability_grade == 'B' %}
+                            <span class="badge reliability-grade grade-b">B</span>
+                        {% elif driver.reliability_grade == 'C+' %}
+                            <span class="badge reliability-grade grade-c-plus">C+</span>
+                        {% elif driver.reliability_grade == 'C' %}
+                            <span class="badge reliability-grade grade-c">C</span>
+                        {% elif driver.reliability_grade == 'D+' %}
+                            <span class="badge reliability-grade grade-d-plus">D+</span>
+                        {% elif driver.reliability_grade == 'D' %}
+                            <span class="badge reliability-grade grade-d">D</span>
+                        {% elif driver.reliability_grade == 'F' %}
+                            <span class="badge reliability-grade grade-f">F</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ driver.reliability_grade }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ driver.rating_volatility }}</td>
+                    <td>{{ driver.race_count }}</td>
+                    <td>{{ driver.first_year }}</td>
+                    <td>{{ driver.last_year }}</td>
+                    <td>{{ driver.career_span }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

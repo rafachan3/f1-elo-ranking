@@ -1,10 +1,12 @@
 from flask import Flask, render_template, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+from flask_bootstrap import Bootstrap5
 from data_processor import F1DataProcessor
 from database_utils import update_database_from_df
 import os
 
 app = Flask(__name__)
+Bootstrap5(app)
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///f1-driver-elo-rankings.db"
