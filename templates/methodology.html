@@ -358,40 +358,77 @@
         <h2 class="h3 mb-3">Confidence Metrics</h2>
         
         <div class="formula-steps">
-            <!-- Rating Volatility -->
-            <div class="card bg-light mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="h5 mb-0">1. Rating Volatility</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <div class="formula-display text-center py-3">
-                                \[\sigma = \sqrt{\frac{\sum_{i=1}^{n}(R_i - \bar{R})^2}{n-1}}\]
-                            </div>
+ <!-- Rating Volatility -->
+<div class="card bg-light mb-4">
+    <div class="card-header">
+        <h4 class="h5 mb-0">1. Rating Volatility</h4>
+    </div>
+    <div class="card-body">
+        <div class="row g-4">
+            <!-- Formula Card -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="h6 mb-0">Formula</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="formula-display text-center">
+                            \[\sigma = \sqrt{\frac{\sum_{i=1}^{n}(R_i - \bar{R})^2}{n-1}}\]
                         </div>
-                        <div class="col-md-6">
-                            <p class="mb-2">Standard deviation of a driver's rating history:</p>
-                            <div class="variables-list">
-                                <ul class="list-unstyled mb-0">
-                                    <li class="mb-2">
-                                        \(\sigma\): Rating volatility
-                                    </li>
-                                    <li class="mb-2">
-                                        \(R_i\): Individual rating in history
-                                    </li>
-                                    <li class="mb-2">
-                                        \(\bar{R}\): Mean rating
-                                    </li>
-                                    <li class="mb-2">
-                                        \(n\): Number of ratings
-                                    </li>
-                                </ul>
-                            </div>
+                        <div class="mt-3">
+                            <p class="mb-2">Where:</p>
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">\(\sigma\): Rating volatility</li>
+                                <li class="mb-2">\(R_i\): Individual rating in history</li>
+                                <li class="mb-2">\(\bar{R}\): Mean rating</li>
+                                <li>\(n\): Number of ratings</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Interpretation Card -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="h6 mb-0">Interpretation Guide</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless mb-3">
+                            <tbody>
+                                <tr>
+                                    <td class="text-nowrap"><strong>0-50:</strong></td>
+                                    <td>Very stable performance - Consistently meets expectations</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-nowrap"><strong>51-100:</strong></td>
+                                    <td>Normal variation - Typical performance fluctuations</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-nowrap"><strong>101-150:</strong></td>
+                                    <td>Moderate volatility - Shows occasional inconsistency</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-nowrap"><strong>151-200:</strong></td>
+                                    <td>High volatility - Significant performance swings</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-nowrap"><strong>200+:</strong></td>
+                                    <td>Extreme volatility - Very inconsistent results</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="alert alert-info mb-0 small">
+                            Higher volatility doesn't necessarily indicate poor performance, but rather the consistency of results. 
+                            Factors like car reliability, team changes, or competing in different eras can all contribute to higher volatility.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- Confidence Interval -->
             <div class="card bg-light mb-4">
