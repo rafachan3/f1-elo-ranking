@@ -46,14 +46,36 @@ class Driver:
         )
 
     def get_flag_level(self):
-        if self.race_count < 10:
-            return 'Rookie'
-        elif 10 <= self.race_count < 20:
-            return 'Developing'
-        elif 20 <= self.race_count < 50:
-            return 'Established'
+        """
+        Determine driver classification based on race count and era.
+        Pre-1980 Era has lower thresholds due to fewer races per season and shorter careers.
+        Modern Era (1980-Present) has higher thresholds reflecting longer seasons and careers.
+        """
+        # If first_year is None, default to modern era classification
+        if not self.first_year or self.first_year >= 1980:
+            # Modern Era (1980-Present)
+            if self.race_count < 25:
+                return 'Rookie'
+            elif self.race_count < 75:
+                return 'Intermediate'
+            elif self.race_count < 150:
+                return 'Experienced'
+            elif self.race_count < 250:
+                return 'Veteran'
+            else:
+                return 'Legend'
         else:
-            return 'Veteran'
+            # Pre-1980 Era
+            if self.race_count < 10:
+                return 'Rookie'
+            elif self.race_count < 25:
+                return 'Intermediate'
+            elif self.race_count < 40:
+                return 'Experienced'
+            elif self.race_count < 50:
+                return 'Veteran'
+            else:
+                return 'Legend'
 
     def to_stats_dict(self, calculator, confidence_calculator, drivers_df, confidence_score, confidence_grade):
         """Convert driver data to statistics dictionary"""
@@ -69,7 +91,6 @@ class Driver:
             'Reliability Grade': confidence_grade,
             'Race Count': self.race_count,
             'Rating Volatility': round(self.get_rating_volatility(), 1),
-            'Is Established': self.race_count >= calculator.MIN_RACES_FOR_ESTABLISHED,
             'First Year': self.first_year,
             'Last Year': self.last_year,
             'Career Span': self.get_career_span(),

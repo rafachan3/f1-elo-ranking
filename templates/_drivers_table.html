@@ -23,13 +23,13 @@
             <td class="fw-bold text-start">{{ driver.driver }}</td>
             <td class="text-center">
                 {% if driver.flag_level == 'Rookie' %}
-                    <span class="badge bg-success">{{ driver.flag_level }}</span>
-                {% elif driver.flag_level == 'Developing' %}
-                    <span class="badge bg-info">{{ driver.flag_level }}</span>
-                {% elif driver.flag_level == 'Established' %}
-                    <span class="badge bg-primary">{{ driver.flag_level }}</span>
-                {% elif driver.flag_level == 'Veteran' %}
+                    <span class="badge bg-info text-dark">{{ driver.flag_level }}</span>
+                {% elif driver.flag_level == 'Intermediate' %}
                     <span class="badge bg-warning text-dark">{{ driver.flag_level }}</span>
+                {% elif driver.flag_level == 'Experienced' %}
+                    <span class="badge bg-success">{{ driver.flag_level }}</span>
+                {% elif driver.flag_level == 'Veteran' %}
+                    <span class="badge bg-primary">{{ driver.flag_level }}</span>
                 {% elif driver.flag_level == 'Legend' %}
                     <span class="badge bg-danger">{{ driver.flag_level }}</span>
                 {% else %}

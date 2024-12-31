@@ -1,53 +1,62 @@
 import pandas as pd
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect
 
 def update_database_from_df(db, DriverEloRanking, df):
+    # Define column mapping between DataFrame and model
+    column_mapping = {
+        'Driver': 'driver',
+        'Elo Rating': 'elo_rating',
+        'Lower Bound': 'lower_bound',
+        'Upper Bound': 'upper_bound',
+        'Confidence Score': 'confidence_score',
+        'Reliability Grade': 'reliability_grade',
+        'Race Count': 'race_count',
+        'Rating Volatility': 'rating_volatility',
+        'First Year': 'first_year',
+        'Last Year': 'last_year',
+        'Career Span': 'career_span',
+        'Flag Level': 'flag_level'
+    }
+    
+    # Get the current model columns using SQLAlchemy inspector
+    inspector = inspect(DriverEloRanking)
+    model_columns = [c.key for c in inspector.columns if c.key != 'id']
+    
     for _, row in df.iterrows():
-        existing_record = db.session.query(DriverEloRanking).filter_by(driver=row["Driver"]).first()
+        # Convert DataFrame row to model column names
+        record_data = {}
+        for df_col, model_col in column_mapping.items():
+            if model_col in model_columns and df_col in row:  # Only include if column exists in model
+                record_data[model_col] = row[df_col]
+        
+        if not record_data.get('driver'):  # Skip if no driver name
+            continue
+            
+        existing_record = db.session.query(DriverEloRanking).filter_by(driver=record_data['driver']).first()
+        
         if existing_record:
-            record_changed = (
-                existing_record.elo_rating != row["Elo Rating"] or
-                existing_record.lower_bound != row["Lower Bound"] or
-                existing_record.upper_bound != row["Upper Bound"] or
-                existing_record.confidence_score != row["Confidence Score"] or
-                existing_record.reliability_grade != row["Reliability Grade"] or
-                existing_record.race_count != row["Race Count"] or
-                existing_record.rating_volatility != row["Rating Volatility"] or
-                existing_record.is_established != row["Is Established"] or
-                existing_record.first_year != row["First Year"] or
-                existing_record.last_year != row["Last Year"] or
-                existing_record.career_span != row["Career Span"] or
-                existing_record.flag_level != row["Flag Level"]
+            # Check if any values have changed
+            record_changed = any(
+                getattr(existing_record, col) != val
+                for col, val in record_data.items()
+                if col in model_columns
             )
+            
             if record_changed:
-                existing_record.elo_rating = row["Elo Rating"]
-                existing_record.lower_bound = row["Lower Bound"]
-                existing_record.upper_bound = row["Upper Bound"]
-                existing_record.confidence_score = row["Confidence Score"]
-                existing_record.reliability_grade = row["Reliability Grade"]
-                existing_record.race_count = row["Race Count"]
-                existing_record.rating_volatility = row["Rating Volatility"]
-                existing_record.is_established = row["Is Established"]
-                existing_record.first_year = row["First Year"]
-                existing_record.last_year = row["Last Year"]
-                existing_record.career_span = row["Career Span"]
-                existing_record.flag_level = row["Flag Level"]
+                # Update only the columns that exist in both
+                for col, val in record_data.items():
+                    if col in model_columns:
+                        setattr(existing_record, col, val)
         else:
-            new_record = DriverEloRanking(
-                driver=row["Driver"],
-                elo_rating=row["Elo Rating"],
-                lower_bound=row["Lower Bound"],
-                upper_bound=row["Upper Bound"],
-                confidence_score=row["Confidence Score"],
-                reliability_grade=row["Reliability Grade"],
-                race_count=row["Race Count"],
-                rating_volatility=row["Rating Volatility"],
-                is_established=row["Is Established"],
-                first_year=row["First Year"],
-                last_year=row["Last Year"],
-                career_span=row["Career Span"],
-                flag_level=row["Flag Level"]
-            )
-            db.session.add(new_record)
+            # Create new record only if we have all required data
+            if all(col in record_data for col in model_columns):
+                new_record = DriverEloRanking(**record_data)
+                db.session.add(new_record)
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating database: {str(e)}")
+        raise

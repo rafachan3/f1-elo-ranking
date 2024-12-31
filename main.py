@@ -28,7 +28,6 @@ class DriverEloRanking(db.Model):
     reliability_grade = db.Column(db.String(10), nullable=False)
     race_count = db.Column(db.Integer, nullable=False)
     rating_volatility = db.Column(db.Float, nullable=False)
-    is_established = db.Column(db.Boolean, nullable=False)
     first_year = db.Column(db.Integer, nullable=False)
     last_year = db.Column(db.Integer, nullable=False)
     career_span = db.Column(db.Integer, nullable=False)
