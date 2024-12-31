@@ -92,3 +92,57 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #343a40;  /* Dark grey */
     color: white;
 }
+
+/* Additional Styling */
+.card-header {
+    background-color: #1F1F27;
+    color: white;
+}
+
+.card .card .card-header {
+    background-color: #38383F;
+}
+
+.fas {
+    width: 20px;
+    text-align: center;
+}
+
+/* Ensure nested cards don't have excessive padding */
+.card .card .card-body {
+    padding: 1rem;
+}
+
+/* Subtle hover effect on interactive elements */
+.list-group-item:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+/* F1 Theme Colors */
+.header-main {
+    background-color: #1F1F27;
+    color: white;
+}
+
+.header-step {
+    background-color: #38383F;
+    color: white;
+}
+
+.header-sub {
+    background-color: #000F2C;
+    color: white;
+}
+
+/* Override any bright bootstrap colors in formula sections */
+.formula-steps .card-header,
+.calculation-steps .card-header {
+    background-color: #1F1F27 !important;
+    color: white !important;
+}
+
+.formula-steps .phase-card .card-header,
+.calculation-steps .step-card .card-header {
+    background-color: #38383F !important;
+    color: white !important;
+}

@@ -6,140 +6,350 @@
     
     <section class="mb-5">
         <h2 class="h3 mb-3">Data Source</h2>
-        <p>The Formula 1 data used in this analysis is sourced from the <a href="https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020" target="_blank">Formula 1 World Championship (1950-2024)</a> dataset available on Kaggle. This comprehensive dataset includes:</p>
-        <ul>
-            <li class="mb-2">Race results from 1950 to 2024</li>
-            <li class="mb-2">Qualifying session results</li>
-            <li class="mb-2">Driver biographical information</li>
-            <li class="mb-2">Constructor (team) information</li>
-            <li class="mb-2">Circuit details</li>
-            <li class="mb-2">Detailed race status information (DNF reasons, etc.)</li>
-        </ul>
+        <div class="card bg-light mb-4">
+            <div class="card-header">
+                <h4 class="h5 mb-0">Dataset Overview</h4>
+            </div>
+            <div class="card-body">
+                <p>The Formula 1 data used in this analysis is sourced from the <a href="https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020" target="_blank">Formula 1 World Championship (1950-2024)</a> dataset available on Kaggle.</p>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="h6 mb-0">Race Data</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="fas fa-flag-checkered me-2"></i>Race results (1950-2024)</li>
+                                    <li class="mb-2"><i class="fas fa-stopwatch me-2"></i>Qualifying session results</li>
+                                    <li class="mb-2"><i class="fas fa-times-circle me-2"></i>Detailed DNF reasons</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="h6 mb-0">Supporting Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="fas fa-user me-2"></i>Driver biographical information</li>
+                                    <li class="mb-2"><i class="fas fa-car me-2"></i>Constructor (team) details</li>
+                                    <li class="mb-2"><i class="fas fa-road me-2"></i>Circuit specifications</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
     <section class="mb-5">
         <h2 class="h3 mb-3">ELO Rating System Overview</h2>
-        <p>The ELO rating system used in this project is specifically adapted for Formula 1 racing. Unlike traditional sports where direct head-to-head comparisons are straightforward, F1 presents unique challenges due to the significant impact of car performance.</p>
         
-        <h4 class="h5 mt-4 mb-3">Key Principles</h4>
-        <ul>
-            <li class="mb-3">
-                <strong>Teammate Comparisons:</strong> Since teammates drive nearly identical cars, comparing their performances provides a valid way to assess driver skill. Their performance differences therefore reflect driving ability more accurately than comparing drivers across different teams.
-            </li>
-            <li class="mb-3">
-                <strong>Cross-Team Comparisons:</strong> When drivers switch teams, they create a network of indirect comparisons. For example, if Driver A beats teammate B, and B later beats C at another team, we can infer relative performance between A and C.
-            </li>
-            <li class="mb-3">
-                <strong>Historical Context:</strong> Results from different eras are weighted differently to account for:
+        <div class="card bg-light mb-4">
+            <div class="card-header">
+                <h4 class="h5 mb-0">Origins and Applications</h4>
+            </div>
+            <div class="card-body">
+                <p>The ELO rating system, developed by Arpad Elo, was originally created for chess rankings but has since proven remarkably versatile across various competitive contexts:</p>
                 <ul>
-                    <li>Reliability differences across eras</li>
-                    <li>Frequency of races per season</li>
-                    <li>Quality of available performance data</li>
+                    <li class="mb-2">Chess and other board games (FIDE World Rankings)</li>
+                    <li class="mb-2">Video games (competitive matchmaking systems)</li>
+                    <li class="mb-2">Sports analytics (football, basketball)</li>
+                    <li class="mb-2">Academic performance assessment</li>
                 </ul>
-            </li>
-        </ul>
+                <p>The system's brilliance lies in its ability to create meaningful comparisons through transitive relationships. For example, in chess, if Player A beats Player B, and Player B beats Player C, the system can infer relative skill levels even if A and C never play each other directly.</p>
+            </div>
+        </div>
+
+        <div class="card bg-light mb-4">
+            <div class="card-header">
+                <h4 class="h5 mb-0">Project Inspiration</h4>
+            </div>
+            <div class="card-body">
+                <p>This project was inspired by the comprehensive analysis presented in "<a href="https://www.youtube.com/watch?v=U16a8tdrbII&t=933s&ab_channel=MrV%27sGarage" target="_blank">I watched EVERY SEASON of F1 and worked out the GOAT is _____</a>" by Mr V's Garage. The video demonstrated how systematic analysis of historical F1 data could reveal insights about driver performance across eras.</p>
+                
+                <p>Building upon this concept, this project aims to:</p>
+                <ul class="mb-0">
+                    <li class="mb-2">Create an objective, data-driven rating system</li>
+                    <li class="mb-2">Account for historical context and era differences</li>
+                    <li class="mb-2">Provide transparent methodology and results</li>
+                    <li class="mb-2">Make findings accessible through interactive visualization</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card bg-light">
+            <div class="card-header">
+                <h4 class="h5 mb-0">Key Implementation Principles</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="h6 mb-3">Core Challenges in F1 Analysis:</h5>
+                <ul class="mb-4">
+                    <li class="mb-2">Car performance significantly influences results</li>
+                    <li class="mb-2">Multiple competitors in each event</li>
+                    <li class="mb-2">Technical failures affect outcomes</li>
+                    <li class="mb-2">Varying track characteristics</li>
+                    <li class="mb-2">Different era characteristics (reliability, season length, data quality)</li>
+                </ul>
+
+                <p class="mb-3">Our implementation addresses these challenges through several key principles:</p>
+
+                <ul class="mb-0">
+                    <li class="mb-4">
+                        <strong>Teammate Comparisons:</strong> Since teammates drive extremely similar cars in terms of their fundamental design, comparing their performances offers a reliable method to evaluate driver skill while minimizing the impact of car performance differences. Their performance differences therefore reflect driving ability more accurately than comparing drivers across different teams.
+                    </li>
+                    <li class="mb-4">
+                        <strong>Cross-Team Comparisons:</strong> When drivers switch teams, they create a network of indirect comparisons. For example, if Driver A beats teammate B, and B later beats C at another team, we can infer relative performance between A and C. This network effect allows the system to build a comprehensive ranking across the entire grid.
+                    </li>
+                    <li class="mb-4">
+                        <strong>Dynamic Learning Rates:</strong> The K-factor system adapts based on:
+                        <ul>
+                            <li>Driver experience level (higher for rookies, lower for veterans)</li>
+                            <li>Season length (normalized across different eras)</li>
+                            <li>Historical era (adjusted for data reliability)</li>
+                        </ul>
+                    </li>
+                    <li class="mb-4">
+                        <strong>Reliability Handling:</strong> The system accounts for:
+                        <ul>
+                            <li>Technical DNFs (excluded from comparison)</li>
+                            <li>Driver-caused DNFs (counted as losses)</li>
+                            <li>Era-specific withdrawal rules (pre/post 1970)</li>
+                            <li>Shortened races (50% weight)</li>
+                        </ul>
+                    </li>
+                    <li class="mb-4">
+                        <strong>Historical Context:</strong> Results are weighted differently to account for:
+                        <ul>
+                            <li>Reliability differences across eras</li>
+                            <li>Frequency of races per season</li>
+                            <li>Quality of available performance data</li>
+                            <li>Different career patterns and longevity</li>
+                        </ul>
+                    </li>
+                    <li class="mb-0">
+                        <strong>Confidence Metrics:</strong> Rating reliability is assessed through:
+                        <ul>
+                            <li>Career length and sample size</li>
+                            <li>Performance consistency</li>
+                            <li>Rating volatility</li>
+                            <li>Era-specific considerations</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </section>
 
-    <section class="mb-5">
+<section class="mb-5">
         <h2 class="h3 mb-3">Core ELO Calculation</h2>
         
-        <h4 class="h5 mt-4 mb-3">1. Base Rating</h4>
-        <p>All drivers start with a base rating of 1500 points, which serves as the average skill level. This value was chosen as it's the traditional starting point in ELO systems and provides good numerical stability.</p>
-
-        <h4 class="h5 mt-4 mb-3">2. Expected Score Calculation</h4>
-        <p>For any pair of drivers (A and B), the expected score for driver A is calculated using:</p>
-        <div class="card bg-light mb-3">
-            <div class="card-body">
-                \[E_A = \frac{1}{1 + 10^{(R_B - R_A)/400}}\]
-                Where:
-                <ul class="mb-0">
-                    <li>\(E_A\) is Driver A's expected score</li>
-                    <li>\(R_A\) is Driver A's current rating</li>
-                    <li>\(R_B\) is Driver B's current rating</li>
-                    <li>400 is the rating difference that represents a 90% expected win probability</li>
-                </ul>
+        <div class="formula-steps">
+            <!-- Step 1: Base Rating -->
+            <div class="card bg-light mb-4">
+                <div class="card-header header-main">
+                    <h4 class="h5 mb-0">1. Base Rating</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="formula-display text-center py-3">
+                                \[R_{initial} = 1500\]
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-0">All drivers start with a base rating of 1500 points. This value:</p>
+                            <ul class="mb-0 mt-2">
+                                <li>Serves as the average skill level</li>
+                                <li>Provides numerical stability</li>
+                                <li>Follows traditional ELO standards</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <h4 class="h5 mt-4 mb-3">3. K-Factor Calculation</h4>
-        <p>The K-factor determines how much a rating can change after each race. The system uses a sophisticated three-phase model that reflects driver development patterns:</p>
-
-        <h5 class="h6 mt-3">Base K-factor Range</h5>
-        <ul>
-            <li>Maximum K-factor: 40 (higher than chess to accommodate F1's greater variability)</li>
-            <li>Minimum K-factor: 20 (higher floor to allow for career evolution)</li>
-        </ul>
-
-        <h5 class="h6 mt-3">Experience Phases</h5>
-        <div class="card bg-light mb-3">
-            <div class="card-body">
-                <p class="fw-bold mb-2">1. Rookie Phase (0-10 races):</p>
-                \[K_{rookie} = K_{max} \cdot 1.0\]
-                <p class="mt-3 fw-bold mb-2">2. Learning Phase (10-25 races):</p>
-                \[progress = \frac{races - 10}{15}\]
-                \[K_{learning} = K_{max} \cdot (1.0 - 0.6 \cdot progress)\]
-                <p class="mt-3 fw-bold mb-2">3. Experience Phase (25-50 races):</p>
-                \[progress = \min(1.0, \frac{races - 25}{25})\]
-                \[K_{experienced} = K_{max} \cdot (0.4 - 0.2 \cdot progress)\]
-                
-                Where:
-                <ul class="mb-0">
-                    <li>K_{max} = 40 (maximum K-factor)</li>
-                    <li>Final K-factor is bounded by K_{min} = 20</li>
-                </ul>
+            <!-- Step 2: Expected Score -->
+            <div class="card bg-light mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="h5 mb-0">2. Expected Score Calculation</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="formula-display text-center py-3">
+                                \[E_A = \frac{1}{1 + 10^{(R_B - R_A)/400}}\]
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="variables-list">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2">
+                                        \(E_A\): Expected score for Driver A
+                                    </li>
+                                    <li class="mb-2">
+                                        \(R_A\): Current rating of Driver A
+                                    </li>
+                                    <li class="mb-2">
+                                        \(R_B\): Current rating of Driver B
+                                    </li>
+                                    <li class="mb-2">
+                                        \(400\): Scaling factor for 90% win probability
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <h5 class="h6 mt-3">Era Adjustment Factors</h5>
-        <div class="card bg-light mb-3">
-            <div class="card-body">
-                Era factors reflect data reliability and standardization:
-                <ul class="mb-0">
-                    <li>1950-1959: 0.7 (limited data reliability)</li>
-                    <li>1960-1969: 0.8 (improving standardization)</li>
-                    <li>1970-1979: 0.9 (modern record-keeping begins)</li>
-                    <li>1980-present: 1.0 (full modern era)</li>
-                </ul>
+            <!-- Step 3: K-Factor -->
+            <div class="card bg-light mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="h5 mb-0">3. K-Factor Calculation</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">The K-factor determines rating change magnitude and varies based on driver experience:</p>
+                    
+                    <div class="experience-phases">
+                        <!-- Rookie Phase -->
+                        <div class="phase-card mb-3">
+                            <div class="card">
+                                <div class="card-header header-step">
+                                    Rookie Phase (0-10 races)
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <div class="formula-display text-center">
+                                                \[K_{rookie} = K_{max} \cdot 1.0\]
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-0">Maximum learning rate applied</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Learning Phase -->
+                        <div class="phase-card mb-3">
+                            <div class="card">
+                                <div class="card-header bg-warning">
+                                    Learning Phase (10-25 races)
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <div class="formula-display text-center">
+                                                \[progress = \frac{races - 10}{15}\]
+                                                \[K_{learning} = K_{max} \cdot (1.0 - 0.6 \cdot progress)\]
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-0">Gradually decreasing learning rate</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Experience Phase -->
+                        <div class="phase-card mb-3">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    Experience Phase (25-50 races)
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <div class="formula-display text-center">
+                                                \[progress = \min(1.0, \frac{races - 25}{25})\]
+                                                \[K_{experienced} = K_{max} \cdot (0.4 - 0.2 \cdot progress)\]
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-0">Stabilized learning rate for experienced drivers</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Final K-Factor Combination -->
+                    <div class="card bg-light mt-4">
+                        <div class="card-header">
+                            Final K-Factor Calculation
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="formula-display text-center">
+                                        \[K_{final} = K_{phase} \cdot F_{era} \cdot F_{season}\]
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="variables-list">
+                                        <ul class="list-unstyled mb-0">
+                                            <li class="mb-2">
+                                                \(K_{phase}\): Experience phase factor
+                                            </li>
+                                            <li class="mb-2">
+                                                \(F_{era}\): Historical era adjustment
+                                            </li>
+                                            <li class="mb-2">
+                                                \(F_{season}\): Season length normalization
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <h5 class="h6 mt-3">Season Length Normalization</h5>
-        <div class="card bg-light mb-3">
-            <div class="card-body">
-                \[F_{season} = 0.8 + 0.2 \cdot \frac{MAX\_RACES - season\_races}{MAX\_RACES - MIN\_RACES}\]
-                Where:
-                <ul class="mb-0">
-                    <li>MAX_RACES = 22 (maximum season length)</li>
-                    <li>MIN_RACES = 7 (minimum season length)</li>
-                    <li>This factor adjusts for varying learning rates in different season lengths</li>
-                </ul>
-            </div>
-        </div>
-
-        <h5 class="h6 mt-3">Final K-Factor</h5>
-        <div class="card bg-light mb-3">
-            <div class="card-body">
-                \[K_{final} = K_{phase} \cdot F_{era} \cdot F_{season}\]
-                Where:
-                <ul class="mb-0">
-                    <li>\(K_{phase}\) is the K-factor from the appropriate experience phase</li>
-                    <li>\(F_{era}\) is the era adjustment factor</li>
-                    <li>\(F_{season}\) is the season length normalization factor</li>
-                </ul>
-            </div>
-        </div>
-
-        <h4 class="h5 mt-4 mb-3">4. Rating Update Formula</h4>
-        <p>After each race, ratings are updated using:</p>
-        <div class="card bg-light mb-3">
-            <div class="card-body">
-                \[R_{new} = R_{old} + K(S_{actual} - E_{expected})\]
-                Where:
-                <ul class="mb-0">
-                    <li>\(S_{actual}\) is 1 for beating teammate, 0 for losing</li>
-                    <li>\(E_{expected}\) is the calculated expected score</li>
-                    <li>\(K\) is the calculated K-factor</li>
-                </ul>
+            <!-- Step 4: Rating Update -->
+            <div class="card bg-light mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="h5 mb-0">4. Rating Update Formula</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="formula-display text-center py-3">
+                                \[R_{new} = R_{old} + K(S_{actual} - E_{expected})\]
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="variables-list">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2">
+                                        \(K_{new}\): Updated rating
+                                    </li>
+                                    <li class="mb-2">
+                                        \(K_{old}\)</code>: Previous rating
+                                    </li>
+                                    <li class="mb-2">
+                                        \(K\): Calculated K-factor
+                                    </li>
+                                    <li class="mb-2">
+                                        \(S_{actual}\): Actual score (1 for win, 0 for loss)
+                                    </li>
+                                    <li class="mb-2">
+                                        \(E_{expected}\): Expected score
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -147,182 +357,546 @@
     <section class="mb-5">
         <h2 class="h3 mb-3">Confidence Metrics</h2>
         
-        <h4 class="h5 mt-4 mb-3">1. Rating Volatility</h4>
-        <p>Rating volatility measures the stability of a driver's performance over time:</p>
-        <div class="card bg-light mb-3">
-            <div class="card-body">
-                \[\sigma = \sqrt{\frac{\sum_{i=1}^{n}(R_i - \bar{R})^2}{n-1}}\]
-                Where:
-                <ul class="mb-0">
-                    <li>\(\sigma\) is the rating volatility</li>
-                    <li>\(R_i\) is each individual rating in history</li>
-                    <li>\(\bar{R}\) is the mean rating</li>
-                    <li>\(n\) is the number of ratings in history</li>
-                </ul>
+        <div class="formula-steps">
+            <!-- Rating Volatility -->
+            <div class="card bg-light mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="h5 mb-0">1. Rating Volatility</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="formula-display text-center py-3">
+                                \[\sigma = \sqrt{\frac{\sum_{i=1}^{n}(R_i - \bar{R})^2}{n-1}}\]
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">Standard deviation of a driver's rating history:</p>
+                            <div class="variables-list">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2">
+                                        \(\sigma\): Rating volatility
+                                    </li>
+                                    <li class="mb-2">
+                                        \(R_i\): Individual rating in history
+                                    </li>
+                                    <li class="mb-2">
+                                        \(\bar{R}\): Mean rating
+                                    </li>
+                                    <li class="mb-2">
+                                        \(n\): Number of ratings
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confidence Interval -->
+            <div class="card bg-light mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="h5 mb-0">2. Confidence Interval Calculation</h4>
+                </div>
+                <div class="card-body">
+                    <div class="calculation-steps">
+                        <!-- Base Standard Error -->
+                        <div class="step-card mb-3">
+                            <div class="card">
+                                <div class="card-header header-step">
+                                    Base Standard Error
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <div class="formula-display text-center">
+                                                \[SE_{base} = \frac{200}{\sqrt{max(1, RaceCount)}}\]
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-0">Initial uncertainty based on number of races</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Adjusted Standard Error -->
+                        <div class="step-card mb-3">
+                            <div class="card">
+                                <div class="card-header header-step">
+                                    Adjusted Standard Error
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <div class="formula-display text-center">
+                                                \[SE_{adjusted} = SE_{base} \cdot (1 + \frac{\sigma}{100}) \cdot (1 + \frac{CareerSpan}{50})\]
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="variables-list">
+                                                <ul class="list-unstyled mb-0">
+                                                    <li class="mb-2">
+                                                        \(\sigma\): Rating volatility
+                                                    </li>
+                                                    <li class="mb-2">
+                                                        \(CareerSpan\): Driver's F1 career length in years
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Final Confidence Interval -->
+                        <div class="step-card mb-3">
+                            <div class="card">
+                                <div class="card-header header-step">
+                                    95% Confidence Interval
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <div class="formula-display text-center">
+                                                \[CI = Rating \pm (1.96 \cdot SE_{adjusted})\]
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-2">Represents the range where:</p>
+                                            <ul class="mb-0">
+                                                <li>95% confidence in true rating</li>
+                                                <li>1.96 is the z-score for 95% level</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confidence Score -->
+            <div class="card bg-light mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="h5 mb-0">3. Confidence Score Calculation</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="formula-display text-center py-3">
+                                \[Score = 100 \cdot \frac{Width_{max} - Width_{current}}{Width_{max} - Width_{min}}\]
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="variables-list">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2">
+                                        \(Widht_{current}\): Driver's CI width
+                                    </li>
+                                    <li class="mb-2">
+                                        \(Widht_{maxt}\): Largest CI width
+                                    </li>
+                                    <li class="mb-2">
+                                        \(Widht_{min}\):: Smallest CI width
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reliability Grade Scale -->
+            <div class="card bg-light">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="h5 mb-0">4. Reliability Grade Scale</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="10%">Grade</th>
+                                    <th width="20%"> Confidence Score Range</th>
+                                    <th>Interpretation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="badge reliability-grade grade-a-plus">A+</span></td>
+                                    <td>90-100</td>
+                                    <td>Extremely reliable: Large sample size, consistent performance</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge reliability-grade grade-a">A</span></td>
+                                    <td>80-89</td>
+                                    <td>Very reliable: Substantial data, stable performance</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge reliability-grade grade-b-plus">B+</span></td>
+                                    <td>70-79</td>
+                                    <td>Reliable: Good sample size, relatively consistent</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge reliability-grade grade-b">B</span></td>
+                                    <td>60-69</td>
+                                    <td>Moderately reliable: Decent sample size</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge reliability-grade grade-c-plus">C+</span></td>
+                                    <td>50-59</td>
+                                    <td>Somewhat reliable: Limited but meaningful data</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge reliability-grade grade-c">C</span></td>
+                                    <td>40-49</td>
+                                    <td>Limited reliability: Small sample size or high volatility</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge reliability-grade grade-d-plus">D+</span></td>
+                                    <td>30-39</td>
+                                    <td>Questionable reliability: Very small sample or extreme volatility</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge reliability-grade grade-d">D</span></td>
+                                    <td>20-29</td>
+                                    <td>Very questionable reliability: Minimal data points</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge reliability-grade grade-f">F</span></td>
+                                    <td>0-19</td>
+                                    <td>Highly unreliable: Insufficient data for meaningful rating</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
+    </section>
 
-        <h4 class="h5 mt-4 mb-3">2. Confidence Interval</h4>
-        <p>The 95% confidence interval is calculated using multiple factors:</p>
-        <div class="card bg-light mb-3">
-            <div class="card-body">
-                Base Standard Error:
-                \[SE_{base} = \frac{200}{\sqrt{max(1, RaceCount)}}\]
-                
-                Adjusted Standard Error:
-                \[SE_{adjusted} = SE_{base} \cdot (1 + \frac{\sigma}{100}) \cdot (1 + \frac{CareerSpan}{50})\]
-                
-                Confidence Interval:
-                \[CI = Rating \pm (1.96 \cdot SE_{adjusted})\]
-                
-                Where:
-                <ul class="mb-0">
-                    <li>1.96 is the z-score for 95% confidence level</li>
-                    <li>CareerSpan is in years</li>
-                    <li>\(\sigma\) is the rating volatility</li>
-                </ul>
+    <section class="mb-5">
+        <h2 class="h3 mb-3">Driver Classification System</h2>
+        
+        <h4 class="h5 mt-4 mb-3">Overview</h4>
+        <p>The driver classification system is designed to accurately reflect a driver's experience level while accounting for the significant historical changes in Formula 1. The sport has evolved dramatically over its history, particularly in terms of season length and career duration. To address this, there is a dual-era classification system that applies different thresholds based on when a driver competed.</p>
+    
+        <h4 class="h5 mt-4 mb-3">Historical Context</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card bg-light mb-3">
+                    <div class="card-header">Pre-1980 Era</div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li>Shorter seasons (typically 7-11 races per year)</li>
+                            <li>Higher safety risks leading to shorter careers</li>
+                            <li>Common practice of participating in multiple racing series</li>
+                            <li>Less specialized preparation and testing</li>
+                            <li>Limited practice sessions and qualifying runs</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-light mb-3">
+                    <div class="card-header">Modern Era (1980-Present)</div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li>Extended seasons (20+ races per year)</li>
+                            <li>Improved safety standards enabling longer careers</li>
+                            <li>Increased specialization and focus on F1</li>
+                            <li>Extensive testing and practice opportunities</li>
+                            <li>Complex qualifying formats and race weekends</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <h4 class="h5 mt-4 mb-3">3. Confidence Score Calculation</h4>
-        <p>The confidence score normalizes the confidence interval width across all drivers:</p>
-        <div class="card bg-light mb-3">
-            <div class="card-body">
-                \[Score = 100 \cdot \frac{Width_{max} - Width_{current}}{Width_{max} - Width_{min}}\]
-                Where:
-                <ul class="mb-0">
-                    <li>\(Width_{current}\) is the driver's CI width</li>
-                    <li>\(Width_{max}\) is the largest CI width in dataset</li>
-                    <li>\(Width_{min}\) is the smallest CI width in dataset</li>
-                </ul>
+    
+        <h4 class="h5 mt-4 mb-3">Classification Levels</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card bg-light mb-3">
+                    <div class="card-header">Pre-1980 Era Thresholds</div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <span class="badge bg-info text-dark">Rookie</span>
+                                <small class="d-block text-muted">0-10 races</small>
+                                Initial entry period and learning phase
+                            </li>
+                            <li class="list-group-item">
+                                <span class="badge bg-warning text-dark">Intermediate</span>
+                                <small class="d-block text-muted">11-25 races</small>
+                                Developing consistency and race craft
+                            </li>
+                            <li class="list-group-item">
+                                <span class="badge bg-success">Experienced</span>
+                                <small class="d-block text-muted">26-40 races</small>
+                                Demonstrated competency and consistent performance
+                            </li>
+                            <li class="list-group-item">
+                                <span class="badge bg-primary">Veteran</span>
+                                <small class="d-block text-muted">41-50 races</small>
+                                Proven long-term competitor
+                            </li>
+                            <li class="list-group-item">
+                                <span class="badge bg-danger">Legend</span>
+                                <small class="d-block text-muted">50+ races</small>
+                                Sustained presence and extensive experience
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-light mb-3">
+                    <div class="card-header">Modern Era Thresholds (1980-Present)</div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <span class="badge bg-info text-dark">Rookie</span>
+                                <small class="d-block text-muted">0-25 races</small>
+                                Equivalent to about one full season
+                            </li>
+                            <li class="list-group-item">
+                                <span class="badge bg-warning text-dark">Intermediate</span>
+                                <small class="d-block text-muted">26-75 races</small>
+                                Multiple seasons of experience
+                            </li>
+                            <li class="list-group-item">
+                                <span class="badge bg-success">Experienced</span>
+                                <small class="d-block text-muted">76-150 races</small>
+                                Comprehensive understanding and proven race craft
+                            </li>
+                            <li class="list-group-item">
+                                <span class="badge bg-primary">Veteran</span>
+                                <small class="d-block text-muted">151-250 races</small>
+                                Long-term competitor across multiple eras
+                            </li>
+                            <li class="list-group-item">
+                                <span class="badge bg-danger">Legend</span>
+                                <small class="d-block text-muted">250+ races</small>
+                                Exceptional longevity and mastery
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <h4 class="h5 mt-4 mb-3">4. Reliability Grade Scale</h4>
-        <table class="table table-bordered">
-            <thead class="table-light">
-                <tr>
-                    <th>Grade</th>
-                    <th>Score Range</th>
-                    <th>Interpretation</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>A+</td>
-                    <td>90-100</td>
-                    <td>Extremely reliable: Large sample size, consistent performance</td>
-                </tr>
-                <tr>
-                    <td>A</td>
-                    <td>80-89</td>
-                    <td>Very reliable: Substantial data, stable performance</td>
-                </tr>
-                <tr>
-                    <td>B+</td>
-                    <td>70-79</td>
-                    <td>Reliable: Good sample size, relatively consistent</td>
-                </tr>
-                <tr>
-                    <td>B</td>
-                    <td>60-69</td>
-                    <td>Moderately reliable: Decent sample size</td>
-                </tr>
-                <tr>
-                    <td>C+</td>
-                    <td>50-59</td>
-                    <td>Somewhat reliable: Limited but meaningful data</td>
-                </tr>
-                <tr>
-                    <td>C</td>
-                    <td>40-49</td>
-                    <td>Limited reliability: Small sample size or high volatility</td>
-                </tr>
-                <tr>
-                    <td>D+</td>
-                    <td>30-39</td>
-                    <td>Questionable reliability: Very small sample or extreme volatility</td>
-                </tr>
-                <tr>
-                    <td>D</td>
-                    <td>20-29</td>
-                    <td>Very questionable reliability: Minimal data points</td>
-                </tr>
-                <tr>
-                    <td>F</td>
-                    <td>0-19</td>
-                    <td>Highly unreliable: Insufficient data for meaningful rating</td>
-                </tr>
-            </tbody>
-        </table>
+    
+        <h4 class="h5 mt-4 mb-3">System Justification</h4>
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                <p>This dual-era classification system provides several key advantages:</p>
+                <ol class="mb-0">
+                    <li><strong>Historical Accuracy:</strong> Recognizes the different demands and circumstances of each era</li>
+                    <li><strong>Fair Comparison:</strong> Allows meaningful comparison of drivers across different periods</li>
+                    <li><strong>Career Context:</strong> Accounts for the evolution of season length and career duration</li>
+                    <li><strong>Experience Recognition:</strong> Acknowledges both short-term intensity and long-term consistency</li>
+                    <li><strong>Era-Appropriate Evaluation:</strong> Reflects the different skill development patterns of each period</li>
+                </ol>
+            </div>
+        </div>
     </section>
 
     <section class="mb-5">
         <h2 class="h3 mb-3">Special Cases and Data Processing</h2>
-        
-        <h4 class="h5 mt-4 mb-3">1. Race Exclusions</h4>
-        <ul>
-            <li class="mb-2">Indianapolis 500 races (1950s): Excluded due to different regulations and non-representative competition</li>
-        </ul>
+        <div class="card bg-light mb-4">
+            <div class="card-header">
+                <h4 class="h5 mb-0">Race Event Handling</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="h6 mb-0">Race Exclusions</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="fas fa-ban text-danger me-3 fs-4"></i>
+                                    <div>
+                                        <strong>Indianapolis 500 (1950s)</strong>
+                                        <p class="mb-0 small">Different regulations and non-representative competition</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="h6 mb-0">50% Weight Races</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2 d-flex align-items-center">
+                                        <i class="fas fa-tachometer-alt me-2"></i>
+                                        <div>
+                                            <strong>1976 Japanese GP</strong>
+                                            <small class="d-block text-muted">Shortened race</small>
+                                        </div>
+                                    </li>
+                                    <li class="mb-2 d-flex align-items-center">
+                                        <i class="fas fa-cloud-rain me-2"></i>
+                                        <div>
+                                            <strong>1991 Australian GP</strong>
+                                            <small class="d-block text-muted">Rain-shortened</small>
+                                        </div>
+                                    </li>
+                                    <li class="mb-2 d-flex align-items-center">
+                                        <i class="fas fa-cloud-rain me-2"></i>
+                                        <div>
+                                            <strong>2009 Malaysian GP</strong>
+                                            <small class="d-block text-muted">Rain-shortened</small>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center">
+                                        <i class="fas fa-flag me-2"></i>
+                                        <div>
+                                            <strong>2021 Belgian GP</strong>
+                                            <small class="d-block text-muted">Minimal racing laps</small>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <h4 class="h5 mt-4 mb-3">2. Race Weight Adjustments</h4>
-        <p>Certain races are weighted at 50% due to unusual circumstances:</p>
-        <ul>
-            <li class="mb-2">1976 Japanese Grand Prix (shortened race)</li>
-            <li class="mb-2">1991 Australian Grand Prix (rain-shortened)</li>
-            <li class="mb-2">2009 Malaysian Grand Prix (rain-shortened)</li>
-            <li class="mb-2">2021 Belgian Grand Prix (minimal racing laps)</li>
-        </ul>
+        <div class="card bg-light">
+            <div class="card-header">
+                <h4 class="h5 mb-0">Race Result Processing</h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <!-- Scope of Analysis -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="h6 mb-0">Scope of Analysis</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-3">Only main race results are processed, excluding:</p>
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2 d-flex align-items-center">
+                                        <i class="fas fa-times me-2 text-danger"></i>
+                                        <span>Qualifying sessions</span>
+                                    </li>
+                                    <li class="mb-2 d-flex align-items-center">
+                                        <i class="fas fa-times me-2 text-danger"></i>
+                                        <span>Sprint races</span>
+                                    </li>
+                                    <li class="d-flex align-items-center">
+                                        <i class="fas fa-times me-2 text-danger"></i>
+                                        <span>Practice sessions</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
 
-    <section class="mb-5">
-        <h2 class="h3 mb-3">Race Result Processing</h2>
-        
-        <h4 class="h5 mt-4 mb-3">Scope of Analysis</h4>
-        <p>The ELO rating system exclusively processes main race results. Other session types are not included in the calculations:</p>
-        <ul>
-            <li class="mb-2">Qualifying sessions are not considered</li>
-            <li class="mb-2">Sprint races are not included</li>
-            <li class="mb-2">Practice sessions are not factored in</li>
-        </ul>
-        <p>This focus on main race results ensures consistency across F1's history, as sprint races are a recent addition and qualifying formats have varied significantly over time.</p>
+                    <!-- Non-Start Classifications -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="h6 mb-0">Non-Start Classifications</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <ul class="list-unstyled mb-0">
+                                            <li class="mb-2">
+                                                <i class="fas fa-circle-xmark me-2 text-danger"></i>Injury
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-circle-xmark me-2 text-danger"></i>107% Rule
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-circle-xmark me-2 text-danger"></i>Did not qualify
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-circle-xmark me-2 text-danger"></i>Pre-race injury
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-6">
+                                        <ul class="list-unstyled mb-0">
+                                            <li class="mb-2">
+                                                <i class="fas fa-circle-xmark me-2 text-danger"></i>Safety concerns
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-circle-xmark me-2 text-danger"></i>Excluded
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-circle-xmark me-2 text-danger"></i>No pre-qualify
+                                            </li>
+                                            <li>
+                                                <i class="fas fa-circle-xmark me-2 text-danger"></i>Fatal accident
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-        <h4 class="h5 mt-4 mb-3">Non-Start Classifications</h4>
-        <p>The following situations are classified as non-starts and are excluded from ELO calculations:</p>
-        <ul>
-            <li class="mb-2">Injury</li>
-            <li class="mb-2">107% Rule - Failed to qualify within 107% of pole time</li>
-            <li class="mb-2">Did not qualify</li>
-            <li class="mb-2">Pre-race injury</li>
-            <li class="mb-2">Safety concerns before race</li>
-            <li class="mb-2">Excluded before race</li>
-            <li class="mb-2">Did not pre-qualify</li>
-            <li class="mb-2">Fatal accident</li>
-        </ul>
-        <p>These situations are excluded as they represent cases where the driver did not participate in the race, making teammate comparison impossible.</p>
+                    <!-- Penalized Results -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="h6 mb-0">Penalized Results</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-3">Driver-caused DNFs result in automatic loss (0 points):</p>
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-car-crash me-2 text-warning"></i>
+                                        <span>Accident</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-car-burst me-2 text-warning"></i>
+                                        <span>Collision</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-rotate me-2 text-warning"></i>
+                                        <span>Spun off</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-        <h4 class="h5 mt-4 mb-3">Penalized Results</h4>
-        <p>When comparing teammates, certain race withdrawals are automatically treated as losses, regardless of finishing position, if they are directly attributable to driver skill. The following withdrawal reasons are assumed to fit this description:</p>
-        <ul>
-            <li class="mb-2">Accident</li>
-            <li class="mb-2">Collision</li>
-            <li class="mb-2">Spun off</li>
-        </ul>
-        <p>A penalty is applied to a driver if his race ended due to one of these reasons and the his teammate finished normally. The penalized driver automatically receives a loss (0 points) while the finishing driver receives a win (1 point). If both drivers received a penalty, the comparison is discarded.</p>
-
-        <h4 class="h5 mt-4 mb-3">Withdrawal Handling</h4>
-        <p>Race withdrawals are handled differently based on the era:</p>
-        <ul>
-            <li class="mb-2">Pre-1970: Withdrawals are counted if the driver had a grid position, suggesting they intended to start the race</li>
-            <li class="mb-2">Post-1970: Withdrawals are only counted if the driver completed at least one lap</li>
-        </ul>
-        <p>This era-based distinction reflects the different racing practices and record-keeping standards of different periods in F1 history.</p>
-        
-
-        <h4 class="h5 mt-4 mb-3">4. Era-Specific Rules</h4>
-        <ul>
-            <li class="mb-2">Pre-1970 withdrawals with grid position: Considered as race starts</li>
-            <li class="mb-2">Post-1970 withdrawals: Must complete at least one lap to count</li>
-        </ul>
+                    <!-- Withdrawal Handling -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="h6 mb-0">Withdrawal Handling</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex flex-column gap-3">
+                                    <div>
+                                        <h6 class="mb-2">Pre-1970 Era</h6>
+                                        <p class="mb-0 small">Counted if driver had grid position</p>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-2">Post-1970 Era</h6>
+                                        <p class="mb-0 small">Counted only if at least one lap completed</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 </div>
 {% endblock %}
