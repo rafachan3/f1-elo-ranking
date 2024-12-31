@@ -277,6 +277,10 @@ def home():
                            pie_chart=pie_chart.to_html(full_html=False),
                            scatter_chart=scatter_chart.to_html(full_html=False))
 
+@app.route('/methodology')
+def methodology():
+    return render_template('methodology.html')
+
 def init_database():
     # Generate the rankings DataFrame
     processor = F1DataProcessor()

@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Methodology</h1>
+    
+    <section class="mb-5">
+        <h2 class="h3 mb-3">Data Source</h2>
+        <p>The Formula 1 data used in this analysis is sourced from the <a href="https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020" target="_blank">Formula 1 World Championship (1950-2024)</a> dataset available on Kaggle. This comprehensive dataset includes:</p>
+        <ul>
+            <li class="mb-2">Race results from 1950 to 2024</li>
+            <li class="mb-2">Qualifying session results</li>
+            <li class="mb-2">Driver biographical information</li>
+            <li class="mb-2">Constructor (team) information</li>
+            <li class="mb-2">Circuit details</li>
+            <li class="mb-2">Detailed race status information (DNF reasons, etc.)</li>
+        </ul>
+    </section>
+
+    <section class="mb-5">
+        <h2 class="h3 mb-3">ELO Rating System Overview</h2>
+        <p>The ELO rating system used in this project is specifically adapted for Formula 1 racing. Unlike traditional sports where direct head-to-head comparisons are straightforward, F1 presents unique challenges due to the significant impact of car performance.</p>
+        
+        <h4 class="h5 mt-4 mb-3">Key Principles</h4>
+        <ul>
+            <li class="mb-3">
+                <strong>Teammate Comparisons:</strong> Since teammates drive nearly identical cars, comparing their performances provides a valid way to assess driver skill. Their performance differences therefore reflect driving ability more accurately than comparing drivers across different teams.
+            </li>
+            <li class="mb-3">
+                <strong>Cross-Team Comparisons:</strong> When drivers switch teams, they create a network of indirect comparisons. For example, if Driver A beats teammate B, and B later beats C at another team, we can infer relative performance between A and C.
+            </li>
+            <li class="mb-3">
+                <strong>Historical Context:</strong> Results from different eras are weighted differently to account for:
+                <ul>
+                    <li>Reliability differences across eras</li>
+                    <li>Frequency of races per season</li>
+                    <li>Quality of available performance data</li>
+                </ul>
+            </li>
+        </ul>
+    </section>
+
+    <section class="mb-5">
+        <h2 class="h3 mb-3">Core ELO Calculation</h2>
+        
+        <h4 class="h5 mt-4 mb-3">1. Base Rating</h4>
+        <p>All drivers start with a base rating of 1500 points, which serves as the average skill level. This value was chosen as it's the traditional starting point in ELO systems and provides good numerical stability.</p>
+
+        <h4 class="h5 mt-4 mb-3">2. Expected Score Calculation</h4>
+        <p>For any pair of drivers (A and B), the expected score for driver A is calculated using:</p>
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                \[E_A = \frac{1}{1 + 10^{(R_B - R_A)/400}}\]
+                Where:
+                <ul class="mb-0">
+                    <li>\(E_A\) is Driver A's expected score</li>
+                    <li>\(R_A\) is Driver A's current rating</li>
+                    <li>\(R_B\) is Driver B's current rating</li>
+                    <li>400 is the rating difference that represents a 90% expected win probability</li>
+                </ul>
+            </div>
+        </div>
+
+        <h4 class="h5 mt-4 mb-3">3. K-Factor Calculation</h4>
+        <p>The K-factor determines how much a rating can change after each race. It's dynamically calculated based on multiple factors:</p>
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                \[K = K_{base} \cdot F_{experience} \cdot F_{era}\]
+                Where:
+                <ul class="mb-0">
+                    <li>\(K_{base}\) is either 32 (maximum) or 16 (minimum)</li>
+                    <li>\(F_{experience} = 1 - min(1, \frac{RaceCount}{50})\)</li>
+                    <li>\(F_{era} = 0.8\) for pre-1970 races, 1.0 otherwise</li>
+                </ul>
+            </div>
+        </div>
+
+        <h4 class="h5 mt-4 mb-3">4. Rating Update Formula</h4>
+        <p>After each race, ratings are updated using:</p>
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                \[R_{new} = R_{old} + K(S_{actual} - E_{expected})\]
+                Where:
+                <ul class="mb-0">
+                    <li>\(S_{actual}\) is 1 for beating teammate, 0 for losing</li>
+                    <li>\(E_{expected}\) is the calculated expected score</li>
+                    <li>\(K\) is the calculated K-factor</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-5">
+        <h2 class="h3 mb-3">Confidence Metrics</h2>
+        
+        <h4 class="h5 mt-4 mb-3">1. Rating Volatility</h4>
+        <p>Rating volatility measures the stability of a driver's performance over time:</p>
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                \[\sigma = \sqrt{\frac{\sum_{i=1}^{n}(R_i - \bar{R})^2}{n-1}}\]
+                Where:
+                <ul class="mb-0">
+                    <li>\(\sigma\) is the rating volatility</li>
+                    <li>\(R_i\) is each individual rating in history</li>
+                    <li>\(\bar{R}\) is the mean rating</li>
+                    <li>\(n\) is the number of ratings in history</li>
+                </ul>
+            </div>
+        </div>
+
+        <h4 class="h5 mt-4 mb-3">2. Confidence Interval</h4>
+        <p>The 95% confidence interval is calculated using multiple factors:</p>
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                Base Standard Error:
+                \[SE_{base} = \frac{200}{\sqrt{max(1, RaceCount)}}\]
+                
+                Adjusted Standard Error:
+                \[SE_{adjusted} = SE_{base} \cdot (1 + \frac{\sigma}{100}) \cdot (1 + \frac{CareerSpan}{50})\]
+                
+                Confidence Interval:
+                \[CI = Rating \pm (1.96 \cdot SE_{adjusted})\]
+                
+                Where:
+                <ul class="mb-0">
+                    <li>1.96 is the z-score for 95% confidence level</li>
+                    <li>CareerSpan is in years</li>
+                    <li>\(\sigma\) is the rating volatility</li>
+                </ul>
+            </div>
+        </div>
+
+        <h4 class="h5 mt-4 mb-3">3. Confidence Score Calculation</h4>
+        <p>The confidence score normalizes the confidence interval width across all drivers:</p>
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                \[Score = 100 \cdot \frac{Width_{max} - Width_{current}}{Width_{max} - Width_{min}}\]
+                Where:
+                <ul class="mb-0">
+                    <li>\(Width_{current}\) is the driver's CI width</li>
+                    <li>\(Width_{max}\) is the largest CI width in dataset</li>
+                    <li>\(Width_{min}\) is the smallest CI width in dataset</li>
+                </ul>
+            </div>
+        </div>
+
+        <h4 class="h5 mt-4 mb-3">4. Reliability Grade Scale</h4>
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Grade</th>
+                    <th>Score Range</th>
+                    <th>Interpretation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>A+</td>
+                    <td>90-100</td>
+                    <td>Extremely reliable: Large sample size, consistent performance</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>80-89</td>
+                    <td>Very reliable: Substantial data, stable performance</td>
+                </tr>
+                <tr>
+                    <td>B+</td>
+                    <td>70-79</td>
+                    <td>Reliable: Good sample size, relatively consistent</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>60-69</td>
+                    <td>Moderately reliable: Decent sample size</td>
+                </tr>
+                <tr>
+                    <td>C+</td>
+                    <td>50-59</td>
+                    <td>Somewhat reliable: Limited but meaningful data</td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>40-49</td>
+                    <td>Limited reliability: Small sample size or high volatility</td>
+                </tr>
+                <tr>
+                    <td>D+</td>
+                    <td>30-39</td>
+                    <td>Questionable reliability: Very small sample or extreme volatility</td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td>20-29</td>
+                    <td>Very questionable reliability: Minimal data points</td>
+                </tr>
+                <tr>
+                    <td>F</td>
+                    <td>0-19</td>
+                    <td>Highly unreliable: Insufficient data for meaningful rating</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="mb-5">
+        <h2 class="h3 mb-3">Special Cases and Data Processing</h2>
+        
+        <h4 class="h5 mt-4 mb-3">1. Race Exclusions</h4>
+        <ul>
+            <li class="mb-2">Indianapolis 500 races (1950s): Excluded due to different regulations and non-representative competition</li>
+        </ul>
+
+        <h4 class="h5 mt-4 mb-3">2. Race Weight Adjustments</h4>
+        <p>Certain races are weighted at 50% due to unusual circumstances:</p>
+        <ul>
+            <li class="mb-2">1976 Japanese Grand Prix (shortened race)</li>
+            <li class="mb-2">1991 Australian Grand Prix (rain-shortened)</li>
+            <li class="mb-2">2009 Malaysian Grand Prix (rain-shortened)</li>
+            <li class="mb-2">2021 Belgian Grand Prix (minimal racing laps)</li>
+        </ul>
+
+    <section class="mb-5">
+        <h2 class="h3 mb-3">Race Result Processing</h2>
+        
+        <h4 class="h5 mt-4 mb-3">Scope of Analysis</h4>
+        <p>The ELO rating system exclusively processes main race results. Other session types are not included in the calculations:</p>
+        <ul>
+            <li class="mb-2">Qualifying sessions are not considered</li>
+            <li class="mb-2">Sprint races are not included</li>
+            <li class="mb-2">Practice sessions are not factored in</li>
+        </ul>
+        <p>This focus on main race results ensures consistency across F1's history, as sprint races are a recent addition and qualifying formats have varied significantly over time.</p>
+
+        <h4 class="h5 mt-4 mb-3">Non-Start Classifications</h4>
+        <p>The following situations are classified as non-starts and are excluded from ELO calculations:</p>
+        <ul>
+            <li class="mb-2">Injury</li>
+            <li class="mb-2">107% Rule - Failed to qualify within 107% of pole time</li>
+            <li class="mb-2">Did not qualify</li>
+            <li class="mb-2">Pre-race injury</li>
+            <li class="mb-2">Safety concerns before race</li>
+            <li class="mb-2">Excluded before race</li>
+            <li class="mb-2">Did not pre-qualify</li>
+            <li class="mb-2">Fatal accident</li>
+        </ul>
+        <p>These situations are excluded as they represent cases where the driver did not participate in the race, making teammate comparison impossible.</p>
+
+        <h4 class="h5 mt-4 mb-3">Penalized Results</h4>
+        <p>When comparing teammates, certain race withdrawals are automatically treated as losses, regardless of finishing position, if they are directly attributable to driver skill. The following withdrawal reasons are assumed to fit this description:</p>
+        <ul>
+            <li class="mb-2">Accident</li>
+            <li class="mb-2">Collision</li>
+            <li class="mb-2">Spun off</li>
+        </ul>
+        <p>A penalty is applied to a driver if his race ended due to one of these reasons and the his teammate finished normally. The penalized driver automatically receives a loss (0 points) while the finishing driver receives a win (1 point). If both drivers received a penalty, the comparison is discarded.</p>
+
+        <h4 class="h5 mt-4 mb-3">Withdrawal Handling</h4>
+        <p>Race withdrawals are handled differently based on the era:</p>
+        <ul>
+            <li class="mb-2">Pre-1970: Withdrawals are counted if the driver had a grid position, suggesting they intended to start the race</li>
+            <li class="mb-2">Post-1970: Withdrawals are only counted if the driver completed at least one lap</li>
+        </ul>
+        <p>This era-based distinction reflects the different racing practices and record-keeping standards of different periods in F1 history.</p>
+        
+
+        <h4 class="h5 mt-4 mb-3">4. Era-Specific Rules</h4>
+        <ul>
+            <li class="mb-2">Pre-1970 withdrawals with grid position: Considered as race starts</li>
+            <li class="mb-2">Post-1970 withdrawals: Must complete at least one lap to count</li>
+        </ul>
+    </section>
+</div>
+{% endblock %}
