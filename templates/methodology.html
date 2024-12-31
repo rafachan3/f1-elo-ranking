@@ -62,15 +62,69 @@
         </div>
 
         <h4 class="h5 mt-4 mb-3">3. K-Factor Calculation</h4>
-        <p>The K-factor determines how much a rating can change after each race. It's dynamically calculated based on multiple factors:</p>
+        <p>The K-factor determines how much a rating can change after each race. The system uses a sophisticated three-phase model that reflects driver development patterns:</p>
+
+        <h5 class="h6 mt-3">Base K-factor Range</h5>
+        <ul>
+            <li>Maximum K-factor: 40 (higher than chess to accommodate F1's greater variability)</li>
+            <li>Minimum K-factor: 20 (higher floor to allow for career evolution)</li>
+        </ul>
+
+        <h5 class="h6 mt-3">Experience Phases</h5>
         <div class="card bg-light mb-3">
             <div class="card-body">
-                \[K = K_{base} \cdot F_{experience} \cdot F_{era}\]
+                <p class="fw-bold mb-2">1. Rookie Phase (0-10 races):</p>
+                \[K_{rookie} = K_{max} \cdot 1.0\]
+                <p class="mt-3 fw-bold mb-2">2. Learning Phase (10-25 races):</p>
+                \[progress = \frac{races - 10}{15}\]
+                \[K_{learning} = K_{max} \cdot (1.0 - 0.6 \cdot progress)\]
+                <p class="mt-3 fw-bold mb-2">3. Experience Phase (25-50 races):</p>
+                \[progress = \min(1.0, \frac{races - 25}{25})\]
+                \[K_{experienced} = K_{max} \cdot (0.4 - 0.2 \cdot progress)\]
+                
                 Where:
                 <ul class="mb-0">
-                    <li>\(K_{base}\) is either 32 (maximum) or 16 (minimum)</li>
-                    <li>\(F_{experience} = 1 - min(1, \frac{RaceCount}{50})\)</li>
-                    <li>\(F_{era} = 0.8\) for pre-1970 races, 1.0 otherwise</li>
+                    <li>K_{max} = 40 (maximum K-factor)</li>
+                    <li>Final K-factor is bounded by K_{min} = 20</li>
+                </ul>
+            </div>
+        </div>
+
+        <h5 class="h6 mt-3">Era Adjustment Factors</h5>
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                Era factors reflect data reliability and standardization:
+                <ul class="mb-0">
+                    <li>1950-1959: 0.7 (limited data reliability)</li>
+                    <li>1960-1969: 0.8 (improving standardization)</li>
+                    <li>1970-1979: 0.9 (modern record-keeping begins)</li>
+                    <li>1980-present: 1.0 (full modern era)</li>
+                </ul>
+            </div>
+        </div>
+
+        <h5 class="h6 mt-3">Season Length Normalization</h5>
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                \[F_{season} = 0.8 + 0.2 \cdot \frac{MAX\_RACES - season\_races}{MAX\_RACES - MIN\_RACES}\]
+                Where:
+                <ul class="mb-0">
+                    <li>MAX_RACES = 22 (maximum season length)</li>
+                    <li>MIN_RACES = 7 (minimum season length)</li>
+                    <li>This factor adjusts for varying learning rates in different season lengths</li>
+                </ul>
+            </div>
+        </div>
+
+        <h5 class="h6 mt-3">Final K-Factor</h5>
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                \[K_{final} = K_{phase} \cdot F_{era} \cdot F_{season}\]
+                Where:
+                <ul class="mb-0">
+                    <li>\(K_{phase}\) is the K-factor from the appropriate experience phase</li>
+                    <li>\(F_{era}\) is the era adjustment factor</li>
+                    <li>\(F_{season}\) is the season length normalization factor</li>
                 </ul>
             </div>
         </div>
