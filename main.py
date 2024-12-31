@@ -302,7 +302,7 @@ if __name__ == "__main__":
         with app.app_context():
             init_database()
     else:
-        print("Database already exists. No action needed.")
+        print("Database already exists. No action needed. Update the database manually if needed.")  
 
     # Start the Flask development server
     app.run(debug=True)

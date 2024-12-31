@@ -54,10 +54,14 @@ class F1DataProcessor:
         races_sorted = self.races.sort_values(by=["year", "round"])
         race_results = self.results[['raceId', 'driverId', 'constructorId', 'positionOrder', 'statusId', 'grid', 'position', 'laps']]
 
+        # Calculate races per season
+        races_per_season = self.races.groupby('year').size()
+
         for race_id in races_sorted["raceId"]:
             race_year = races_sorted[races_sorted['raceId'] == race_id]['year'].iloc[0]
             race_name = races_sorted[races_sorted['raceId'] == race_id]['name'].iloc[0]
-                
+            season_races = races_per_season[race_year]
+
             # Filter out Indianapolis 500 races using specific raceIds
             if race_id in self.indy_500_race_ids:
                 continue
@@ -102,14 +106,22 @@ class F1DataProcessor:
                     continue  # Only skips teammate comparison, not race counting
 
                 for row_a, row_b in combinations(group.itertuples(index=False), 2):
-                    self._process_driver_pair(row_a, row_b, race_year)
+                    self._process_driver_pair(row_a, row_b, race_year, season_races)
 
-    def _process_driver_pair(self, row_a, row_b, race_year):
+    def _process_driver_pair(self, row_a, row_b, race_year, season_races):
         driver_a = self.drivers_dict[row_a.driverId]
         driver_b = self.drivers_dict[row_b.driverId]
 
-        k_factor_a = self.elo_calculator.calculate_k_factor(driver_a.race_count, race_year)
-        k_factor_b = self.elo_calculator.calculate_k_factor(driver_b.race_count, race_year)
+        k_factor_a = self.elo_calculator.calculate_k_factor(
+            driver_a.race_count, 
+            race_year,
+            season_races
+        )
+        k_factor_b = self.elo_calculator.calculate_k_factor(
+            driver_b.race_count, 
+            race_year,
+            season_races
+        )
 
         status_a = self.status_mapping[row_a.statusId]
         status_b = self.status_mapping[row_b.statusId]
