@@ -3,6 +3,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap5
 from data_processor import F1DataProcessor
 from database_utils import update_database_from_df
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import pandas as pd
 import os
 
 app = Flask(__name__)
@@ -95,6 +99,183 @@ def complete_rankings():
             'search': search_query
         }
     )
+
+@app.route('/')
+def home():
+    # Fetch data from database
+    drivers = DriverEloRanking.query.all()
+    df = pd.DataFrame([{col.name: getattr(driver, col.name) for col in DriverEloRanking.__table__.columns} for driver in drivers])
+
+    # Graph 1: Top Drivers by ELO Rating
+    top_drivers = df.nlargest(10, 'elo_rating')
+    bar_chart = px.bar(
+        top_drivers,
+        x='driver',
+        y=top_drivers['elo_rating'].round(0),
+        labels={'elo_rating': 'ELO Rating', 'driver': 'Driver'},
+        text=top_drivers['elo_rating'].round(0)
+    )
+    bar_chart.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        title=None,
+        yaxis_title='ELO Rating',
+        hovermode=False
+    )
+
+    # Graph 2: ELO Trends by Era
+    df['era'] = (df['first_year'] // 10) * 10
+    era_group = df.groupby('era').agg({'elo_rating': ['mean', 'max']}).reset_index()
+    era_group.columns = ['Era', 'Average ELO', 'Top ELO']
+
+    line_chart = go.Figure()
+    line_chart.add_trace(go.Scatter(
+        x=era_group['Era'], 
+        y=era_group['Average ELO'].round(0), 
+        mode='lines+markers',
+        name='Average ELO', 
+        hovertemplate='Era: %{x}<br>Average ELO: %{y:,.0f}'
+    ))
+    line_chart.add_trace(go.Scatter(
+        x=era_group['Era'], 
+        y=era_group['Top ELO'].round(0), 
+        mode='lines+markers',
+        name='Top ELO', 
+        hovertemplate='Era: %{x}<br>Top ELO: %{y:,.0f}'
+    ))
+    line_chart.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        title=None,
+        xaxis_title='Decade',
+        yaxis_title='ELO Rating',
+        xaxis=dict(
+            showgrid=True,
+            gridwidth=1,
+            gridcolor='rgba(128, 128, 128, 0.2)',
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridwidth=1,
+            gridcolor='rgba(128, 128, 128, 0.2)',
+        )
+    )
+
+    # Graph 3: Driver Reliability Grades Distribution
+    reliability_group = df.groupby('reliability_grade').agg({'elo_rating': 'mean', 'driver': 'count'}).reset_index()
+    reliability_group.columns = ['Reliability Grade', 'Average ELO', 'Driver Count']
+
+    # Define the desired order for reliability grades
+    grade_order = ['A+', 'A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F']
+
+    # Define color mapping
+    grade_colors = {
+        'A+': '#198754',  # Dark green
+        'A': '#28a745',   # Standard green
+        'B+': '#0d6efd',  # Dark blue
+        'B': '#3d8bfd',   # Standard blue
+        'C+': '#fd7e14',  # Dark orange
+        'C': '#ffc107',   # Standard yellow
+        'D+': '#dc3545',  # Dark red
+        'D': '#e35d6a',   # Standard red
+        'F': '#343a40'    # Dark grey
+    }
+
+    # Reorder the DataFrame based on the custom order
+    reliability_group['Reliability Grade'] = pd.Categorical(
+        reliability_group['Reliability Grade'], 
+        categories=grade_order, 
+        ordered=True
+    )
+    reliability_group = reliability_group.sort_values('Reliability Grade')
+
+    pie_chart = px.pie(
+        reliability_group,
+        values='Driver Count',
+        names='Reliability Grade',
+        labels={'Driver Count': 'Driver Count', 'Reliability Grade': 'Reliability Grade'},
+        category_orders={'Reliability Grade': grade_order},
+        color='Reliability Grade',
+        color_discrete_map=grade_colors
+    )
+    pie_chart.update_traces(
+        hovertemplate='Grade: %{label}<br>Count: %{value:,.0f}'
+    )
+    pie_chart.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        title=None
+    )
+
+    # Graph 4: Career Longevity vs. ELO
+    # Calculate average ELO rating and count for each career span length
+    career_span_data = df.groupby('career_span').agg({
+        'elo_rating': 'mean',
+        'driver': 'count'  # Count number of drivers
+    }).reset_index()
+
+    career_span_data.columns = ['career_span', 'avg_elo', 'driver_count']
+    career_span_data['avg_elo'] = career_span_data['avg_elo'].round(0)
+
+    # Create a color scale that can handle any number of points
+    import numpy as np
+    n_points = len(career_span_data)
+    colors = [f'hsl({h},70%,50%)' for h in np.linspace(0, 300, n_points)]
+
+    scatter_chart = go.Figure()
+
+    # Calculate circle sizes with a better scaling function
+    min_size = 10
+    max_size = 50
+    min_count = career_span_data['driver_count'].min()
+    max_count = career_span_data['driver_count'].max()
+
+    def scale_size(count):
+        if max_count == min_count:
+            return (min_size + max_size) / 2
+        scaled = (count - min_count) / (max_count - min_count)
+        return min_size + (max_size - min_size) * scaled
+
+    career_span_data['point_size'] = career_span_data['driver_count'].apply(scale_size)
+
+    scatter_chart.add_trace(go.Scatter(
+        x=career_span_data['career_span'],
+        y=career_span_data['avg_elo'],
+        mode='markers',
+        marker=dict(
+            size=career_span_data['point_size'],
+            color=colors,
+            line=dict(width=1, color='darkgray')
+        ),
+        hovertemplate='Career Span: %{x} years<br>Average ELO: %{y:,.0f}<br>Drivers: %{customdata}<extra></extra>',
+        customdata=career_span_data['driver_count']
+    ))
+
+    scatter_chart.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        title=None,
+        showlegend=False,
+        xaxis=dict(
+            showgrid=True,
+            gridwidth=1,
+            gridcolor='rgba(128, 128, 128, 0.2)',
+            title='Career Span (Years)',
+            range=[-1, career_span_data['career_span'].max() + 1]
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridwidth=1,
+            gridcolor='rgba(128, 128, 128, 0.2)',
+            title='ELO Rating'
+        )
+    )
+
+    return render_template('index.html',
+                           bar_chart=bar_chart.to_html(full_html=False),
+                           line_chart=line_chart.to_html(full_html=False),
+                           pie_chart=pie_chart.to_html(full_html=False),
+                           scatter_chart=scatter_chart.to_html(full_html=False))
 
 def init_database():
     # Generate the rankings DataFrame

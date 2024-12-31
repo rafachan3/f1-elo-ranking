@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">F1 Driver Rankings: An Elo-Based Analysis</h1>
+    <div class="row">
+        <!-- Top Drivers by ELO -->
+        <div class="col-md-6 mb-4">
+            <h3>Top 10 All-Time Drivers by ELO Rating</h3>
+            {{ bar_chart | safe }}
+        </div>
+
+        <!-- ELO Trends by Era -->
+        <div class="col-md-6 mb-4">
+            <h3>ELO Trends by Decade</h3>
+            {{ line_chart | safe }}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Driver Reliability Grades -->
+        <div class="col-md-6 mb-4">
+            <h3> Distribution of ELO Rating Reliability Grades Across Drivers </h3>
+            {{ pie_chart | safe }}
+        </div>
+
+        <!-- Career Longevity vs ELO -->
+        <div class="col-md-6 mb-4">
+            <h3>Career Longevity vs ELO</h3>
+            {{ scatter_chart | safe }}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
