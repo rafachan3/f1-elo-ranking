@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Driver Header Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-4">{{ driver.driver }}</h1>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge {% if driver.flag_level == 'Rookie' %}bg-info text-dark
+                      {% elif driver.flag_level == 'Intermediate' %}bg-warning text-dark
+                      {% elif driver.flag_level == 'Experienced' %}bg-success
+                      {% elif driver.flag_level == 'Veteran' %}bg-primary
+                      {% else %}bg-danger{% endif %}">
+                    {{ driver.flag_level }}
+                </span>
+                <span class="badge reliability-grade grade-{{ driver.reliability_grade.lower().replace('+', '-plus') }}">
+                    {{ driver.reliability_grade }}
+                </span>
+            </div>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="fs-2 fw-bold text-primary">{{ "%.0f"|format(driver.elo_rating) }}</div>
+            <div class="text-muted">Current ELO Rating</div>
+        </div>
+    </div>
+
+    <!-- Key Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted mb-1">Career Span</h6>
+                    <div class="d-flex align-items-baseline">
+                        <span class="h3 mb-0 me-2">{{ driver.career_span }}</span>
+                        <span class="text-muted">years</span>
+                    </div>
+                    <small class="text-muted">{{ driver.first_year }} - {{ driver.last_year }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted mb-1">Races</h6>
+                    <div class="d-flex align-items-baseline">
+                        <span class="h3 mb-0">{{ driver.race_count }}</span>
+                    </div>
+                    <small class="text-muted">Total Grand Prix starts</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted mb-1">Rating Volatility</h6>
+                    <div class="d-flex align-items-baseline">
+                        <span class="h3 mb-0 me-2">{{ "%.1f"|format(driver.rating_volatility) }}</span>
+                    </div>
+                    <small class="text-muted">Performance consistency measure</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted mb-1">Confidence Score</h6>
+                    <div class="d-flex align-items-baseline">
+                        <span class="h3 mb-0 me-2">{{ driver.confidence_score }}</span>
+                        <span class="text-muted">/100</span>
+                    </div>
+                    <small class="text-muted">Rating reliability measure</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ELO Rating Charts -->
+    <div class="row g-4 mb-4">
+        <!-- Career ELO Progression -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Career ELO Rating Progression</h5>
+                </div>
+                <div class="card-body">
+                    {{ elo_history_chart | safe }}
+                </div>
+            </div>
+        </div>
+        <!-- Team-based ELO Progression -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">ELO Rating by Team</h5>
+                </div>
+                <div class="card-body">
+                    {{ team_elo_chart | safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Statistics -->
+    <div class="row g-4 mb-4">
+        <!-- Head-to-Head Records -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Top Teammate Comparisons</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Teammate</th>
+                                    <th class="text-center">Races</th>
+                                    <th class="text-center">Win %</th>
+                                    <th class="text-center">Avg Δ ELO</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for comparison in teammate_comparisons %}
+                                <tr>
+                                    <td>{{ comparison.teammate }}</td>
+                                    <td class="text-center">{{ comparison.races }}</td>
+                                    <td class="text-center">{{ "%.1f"|format(comparison.win_percentage) }}%</td>
+                                    <td class="text-center">{{ "%.1f"|format(comparison.elo_diff) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Performance by Era -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Performance by Era</h5>
+                </div>
+                <div class="card-body">
+                    {{ era_performance_chart | safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating Confidence Analysis -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Rating Confidence Analysis</h5>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    {{ confidence_chart | safe }}
+                </div>
+                <div class="col-md-6">
+                    <h6>Confidence Interval</h6>
+                    <p class="mb-4">
+                        95% confidence interval: {{ "%.0f"|format(driver.lower_bound) }} - {{ "%.0f"|format(driver.upper_bound) }}
+                    </p>
+                    
+                    <h6>Rating Volatility Analysis</h6>
+                    <p class="mb-0">
+                        {% if driver.rating_volatility < 50 %}
+                            Shows very consistent performance across their career.
+                        {% elif driver.rating_volatility < 100 %}
+                            Demonstrates normal performance variations.
+                        {% elif driver.rating_volatility < 150 %}
+                            Shows moderate performance fluctuations.
+                        {% else %}
+                            Exhibits significant performance variations.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

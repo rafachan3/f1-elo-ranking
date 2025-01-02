@@ -6,6 +6,7 @@ from database_utils import update_database_from_df
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from visualization_utils import DriverVisualizationUtils
 import pandas as pd
 import os
 
@@ -21,6 +22,7 @@ db = SQLAlchemy(app)
 class DriverEloRanking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver = db.Column(db.String(250), nullable=False)
+    f1_driver_id = db.Column(db.Integer, nullable=False)  # Changed from driver_id
     elo_rating = db.Column(db.Float, nullable=False)
     lower_bound = db.Column(db.Float, nullable=False)
     upper_bound = db.Column(db.Float, nullable=False)
@@ -279,6 +281,77 @@ def home():
 @app.route('/methodology')
 def methodology():
     return render_template('methodology.html')
+
+# In main.py - Update the driver_profile route
+
+@app.route('/driver/<int:driver_id>')
+def driver_profile(driver_id):
+    driver = DriverEloRanking.query.get_or_404(driver_id)
+
+    processor = F1DataProcessor()
+    processor.load_data()
+    processor.process_races()
+
+    # Get career data with proper joins
+    career_data = pd.merge(
+        processor.results,
+        processor.races[['raceId', 'year', 'round', 'name']],
+        on='raceId'
+    )
+    
+    career_data = pd.merge(
+        career_data,
+        processor.constructors[['constructorId', 'name']].rename(columns={'name': 'team'}),
+        on='constructorId'
+    )
+
+    # Filter for this driver
+    driver_data = career_data[career_data['driverId'] == driver.f1_driver_id].copy()
+    
+    if not driver_data.empty:
+        try:
+            # Get ELO progression
+            elo_progression = processor.get_driver_elo_progression(driver.f1_driver_id)
+            if not elo_progression.empty:
+                # Add ELO ratings to driver data
+                driver_data = driver_data.merge(
+                    elo_progression[['year', 'elo_rating']], 
+                    on='year', 
+                    how='left'
+                )
+                
+                # Forward fill ELO ratings within each year
+                driver_data['elo_rating'] = driver_data.groupby('year')['elo_rating'].fillna(method='ffill')
+                
+                # Initialize visualization utils and generate charts
+                viz_utils = DriverVisualizationUtils()
+                
+                charts = {
+                    'elo_history_chart': viz_utils.create_elo_history_chart(elo_progression, driver.driver),
+                    'team_elo_chart': viz_utils.create_team_elo_chart(driver_data, driver.driver),
+                    'era_performance_chart': viz_utils.create_era_performance_chart(elo_progression),
+                    'confidence_chart': viz_utils.create_confidence_chart(driver)
+                }
+
+                teammate_comparisons = viz_utils.get_teammate_comparisons(driver_data, career_data, processor.drivers)
+
+                return render_template(
+                    'driver_profile.html',
+                    driver=driver,
+                    elo_history_chart=charts['elo_history_chart'].to_html(full_html=False),
+                    team_elo_chart=charts['team_elo_chart'].to_html(full_html=False),
+                    era_performance_chart=charts['era_performance_chart'].to_html(full_html=False),
+                    confidence_chart=charts['confidence_chart'].to_html(full_html=False),
+                    teammate_comparisons=teammate_comparisons
+                )
+            else:
+                return "No ELO progression data available", 404
+                
+        except Exception as e:
+            print(f"Error processing driver data: {str(e)}")
+            return f"Error processing driver data: {str(e)}", 500
+    else:
+        return "No career data found for driver", 404
 
 def init_database():
     # Generate the rankings DataFrame

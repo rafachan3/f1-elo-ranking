@@ -43,14 +43,37 @@ class F1DataProcessor:
         self.status = pd.read_csv(f'{data_path}/status.csv')
 
         self.races = self.races[self.races['name'] != 'Indianapolis 500']
-        
+
+        print("Creating driver objects...")
         # Initialize driver objects
-        for driver_id in self.drivers['driverId']:
+        for _, driver_row in self.drivers.iterrows():
+            driver_id = driver_row['driverId']
             self.drivers_dict[driver_id] = Driver(driver_id, self.elo_calculator.BASE_ELO)
             
         self.status_mapping = dict(zip(self.status['statusId'], self.status['status']))
 
+    def get_driver_elo_progression(self, driver_id):
+        """Get the ELO rating progression for a specific driver."""
+        driver = self.drivers_dict.get(driver_id)
+        
+        if not driver or driver.first_year is None or driver.last_year is None:
+            print("Driver not found or missing year data")
+            return pd.DataFrame(columns=['year', 'driverId', 'elo_rating'])
+        
+        # Create yearly progression
+        years = range(driver.first_year, driver.last_year + 1)
+        data = {
+            'year': list(years),
+            'driverId': [driver_id] * len(years),
+            'elo_rating': driver.rating_history[-len(years):]  # Take the last N ratings where N is the number of years
+        }
+        
+        progression = pd.DataFrame(data)
+                
+        return progression
+
     def process_races(self):
+        print("Starting race processing")
         races_sorted = self.races.sort_values(by=["year", "round"])
         race_results = self.results[['raceId', 'driverId', 'constructorId', 'positionOrder', 'statusId', 'grid', 'position', 'laps']]
 

@@ -84,6 +84,7 @@ class Driver:
         
         return {
             'Driver': f"{driver_info['forename']} {driver_info['surname']}",
+            'f1_driver_id': self.driver_id,  # Changed from driver_id
             'Elo Rating': self.rating,
             'Lower Bound': round(lower_bound, 1),
             'Upper Bound': round(upper_bound, 1),

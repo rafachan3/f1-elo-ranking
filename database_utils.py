@@ -6,6 +6,7 @@ def update_database_from_df(db, DriverEloRanking, df):
     # Define column mapping between DataFrame and model
     column_mapping = {
         'Driver': 'driver',
+        'f1_driver_id': 'f1_driver_id',  # Changed from driver_id to f1_driver_id
         'Elo Rating': 'elo_rating',
         'Lower Bound': 'lower_bound',
         'Upper Bound': 'upper_bound',

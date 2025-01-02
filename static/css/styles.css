@@ -24,6 +24,20 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.95rem;
 }
 
+/* Driver Links Styling */
+.driver-row {
+    transition: background-color 0.2s ease;
+}
+
+.driver-row:hover {
+    background-color: rgba(13, 110, 253, 0.05) !important;
+}
+
+.hover-primary:hover {
+    color: #0d6efd !important;
+    transition: color 0.2s ease;
+}
+
 /* Badge styles with increased specificity */
 .table .badge {
     transition: all 0.2s ease;
