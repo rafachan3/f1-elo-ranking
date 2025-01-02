@@ -88,7 +88,6 @@ class DriverVisualizationUtils:
         """Calculate head-to-head statistics against teammates."""
         comparisons = []
         driver_id = driver_data['driverId'].iloc[0]
-        driver_elo_by_year = driver_data.groupby('year')['elo_rating'].mean()
 
         career_data = pd.merge(
             career_data,
@@ -99,30 +98,37 @@ class DriverVisualizationUtils:
         career_data['driverRef'] = career_data['forename'] + ' ' + career_data['surname']
 
         for team in driver_data['team'].unique():
-            team_races = career_data[career_data['team'] == team]
-            driver_races = driver_data[driver_data['team'] == team]
+            team_races = career_data[career_data['team'] == team].copy()
+            driver_races = driver_data[driver_data['team'] == team].copy()
             
             for teammate_id in team_races['driverId'].unique():
                 if teammate_id == driver_id:
                     continue
                     
                 teammate_races = team_races[team_races['driverId'] == teammate_id]
+                
+                # Get races where both drivers competed
                 common_races = pd.merge(
                     driver_races[['raceId', 'team', 'positionOrder', 'year', 'elo_rating']],
-                    teammate_races[['raceId', 'team', 'positionOrder', 'driverRef', 'year']],
-                    on=['raceId', 'team', 'year'],
+                    teammate_races[['raceId', 'team', 'positionOrder', 'driverRef', 'elo_rating']],
+                    on=['raceId', 'team'],
                     suffixes=('_driver', '_teammate')
                 )
                 
                 if len(common_races) > 0:
+                    # Calculate win percentage
                     wins = sum(common_races['positionOrder_driver'] < common_races['positionOrder_teammate'])
-                    elo_diff = common_races['elo_rating'].mean()
+                    win_percentage = (wins / len(common_races)) * 100
+                    
+                    # Calculate average ELO difference
+                    elo_differences = common_races['elo_rating_driver'] - common_races['elo_rating_teammate']
+                    avg_elo_diff = round(float(elo_differences.mean()), 1)  # Round to 1 decimal place
                     
                     comparisons.append({
                         'teammate': teammate_races['driverRef'].iloc[0],
                         'races': len(common_races),
-                        'win_percentage': (wins / len(common_races)) * 100,
-                        'elo_diff': elo_diff
+                        'win_percentage': win_percentage,
+                        'elo_diff': avg_elo_diff if abs(avg_elo_diff) > 0.05 else 0.0  # Avoid -0.0 display
                     })
 
         return sorted(comparisons, key=lambda x: x['races'], reverse=True)[:5]

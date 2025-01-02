@@ -282,8 +282,6 @@ def home():
 def methodology():
     return render_template('methodology.html')
 
-# In main.py - Update the driver_profile route
-
 @app.route('/driver/<int:driver_id>')
 def driver_profile(driver_id):
     driver = DriverEloRanking.query.get_or_404(driver_id)
@@ -305,31 +303,33 @@ def driver_profile(driver_id):
         on='constructorId'
     )
 
+    # Get all drivers' ELO progression
+    all_elo_progression = processor.get_all_drivers_elo_progression()
+
+    # Add ELO data to career_data
+    career_data = pd.merge(
+        career_data,
+        all_elo_progression[['year', 'driverId', 'elo_rating']],
+        on=['year', 'driverId'],
+        how='left'
+    )
+
     # Filter for this driver
     driver_data = career_data[career_data['driverId'] == driver.f1_driver_id].copy()
     
     if not driver_data.empty:
         try:
-            # Get ELO progression
-            elo_progression = processor.get_driver_elo_progression(driver.f1_driver_id)
-            if not elo_progression.empty:
-                # Add ELO ratings to driver data
-                driver_data = driver_data.merge(
-                    elo_progression[['year', 'elo_rating']], 
-                    on='year', 
-                    how='left'
-                )
-                
-                # Forward fill ELO ratings within each year
-                driver_data['elo_rating'] = driver_data.groupby('year')['elo_rating'].fillna(method='ffill')
-                
+            # Get ELO progression for charts
+            driver_elo_progression = processor.get_driver_elo_progression(driver.f1_driver_id)
+            
+            if not driver_elo_progression.empty:
                 # Initialize visualization utils and generate charts
                 viz_utils = DriverVisualizationUtils()
                 
                 charts = {
-                    'elo_history_chart': viz_utils.create_elo_history_chart(elo_progression, driver.driver),
+                    'elo_history_chart': viz_utils.create_elo_history_chart(driver_elo_progression, driver.driver),
                     'team_elo_chart': viz_utils.create_team_elo_chart(driver_data, driver.driver),
-                    'era_performance_chart': viz_utils.create_era_performance_chart(elo_progression),
+                    'era_performance_chart': viz_utils.create_era_performance_chart(driver_elo_progression),
                     'confidence_chart': viz_utils.create_confidence_chart(driver)
                 }
 

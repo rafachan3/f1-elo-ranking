@@ -57,20 +57,53 @@ class F1DataProcessor:
         driver = self.drivers_dict.get(driver_id)
         
         if not driver or driver.first_year is None or driver.last_year is None:
-            print("Driver not found or missing year data")
+            print(f"Driver {driver_id} not found or missing year data")
             return pd.DataFrame(columns=['year', 'driverId', 'elo_rating'])
         
-        # Create yearly progression
-        years = range(driver.first_year, driver.last_year + 1)
+        # Create progression data
+        years = list(range(driver.first_year, driver.last_year + 1))
+        num_years = len(years)
+        
+        # Ensure we have enough ratings
+        if len(driver.rating_history) < num_years:
+            # If we don't have enough ratings, pad with the base ELO
+            ratings = [self.elo_calculator.BASE_ELO] * (num_years - len(driver.rating_history))
+            ratings.extend(driver.rating_history)
+        else:
+            # Take the last N ratings where N is number of years
+            ratings = driver.rating_history[-num_years:]
+        
+        # Verify array lengths
+        if len(years) != len(ratings):
+            print(f"Warning: Mismatch in array lengths for driver {driver_id}")
+            print(f"Years: {len(years)}, Ratings: {len(ratings)}")
+            # Adjust ratings array if necessary
+            if len(ratings) > len(years):
+                ratings = ratings[-len(years):]
+            else:
+                ratings.extend([ratings[-1]] * (len(years) - len(ratings)))
+        
         data = {
-            'year': list(years),
+            'year': years,
             'driverId': [driver_id] * len(years),
-            'elo_rating': driver.rating_history[-len(years):]  # Take the last N ratings where N is the number of years
+            'elo_rating': ratings
         }
         
-        progression = pd.DataFrame(data)
-                
-        return progression
+        return pd.DataFrame(data)
+
+    def get_all_drivers_elo_progression(self):
+        """Get ELO progression for all drivers."""
+        all_progressions = []
+        
+        for driver_id, driver in self.drivers_dict.items():
+            if driver.race_count > 0:  # Only include drivers who participated in races
+                progression = self.get_driver_elo_progression(driver_id)
+                if not progression.empty:
+                    all_progressions.append(progression)
+        
+        if all_progressions:
+            return pd.concat(all_progressions, ignore_index=True)
+        return pd.DataFrame(columns=['year', 'driverId', 'elo_rating'])
 
     def process_races(self):
         print("Starting race processing")

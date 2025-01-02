@@ -11,8 +11,8 @@ class Driver:
     
     def update_rating(self, new_rating):
         """Update driver's rating and rating history"""
-        self.rating_history.append(new_rating)
         self.rating = new_rating
+        self.rating_history.append(new_rating)
         
     def update_years(self, race_year):
         """Update driver's first and last year"""
