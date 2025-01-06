@@ -1,6 +1,7 @@
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap5
+from flask_mail import Mail, Message
 from data_processor import F1DataProcessor
 from database_utils import update_database_from_df
 import plotly.express as px
@@ -8,9 +9,16 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from visualization_utils import DriverVisualizationUtils
 import pandas as pd
+from dotenv import load_dotenv
+import smtplib
+import numpy as np
 import os
+from forms import ContactForm
+
+load_dotenv()
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ["FLASK_SECRET_KEY"]
 Bootstrap5(app)
 
 # Database configuration
@@ -219,7 +227,6 @@ def home():
     career_span_data['avg_elo'] = career_span_data['avg_elo'].round(0)
 
     # Create a color scale that can handle any number of points
-    import numpy as np
     n_points = len(career_span_data)
     colors = [f'hsl({h},70%,50%)' for h in np.linspace(0, 300, n_points)]
 
@@ -457,6 +464,49 @@ def create_comparison_chart(comparison_data):
     )
     
     return fig.to_html(full_html=False)
+
+# Mail config
+MAIL_SERVER=os.environ['MAIL_SERVER']
+MAIL_PORT=os.environ['MAIL_PORT']
+MAIL_USERNAME = os.environ['MAIL_USERNAME']
+MAIL_PASSWORD = os.environ['MAIL_PASSWORD']
+
+app.config.update(
+   MAIL_SERVER='smtp.gmail.com',
+   MAIL_PORT=587,
+   MAIL_USE_TLS=True,
+   MAIL_USE_SSL=False,
+   MAIL_USERNAME=MAIL_USERNAME,
+   MAIL_PASSWORD=MAIL_PASSWORD,
+   MAIL_DEFAULT_SENDER=MAIL_USERNAME
+)
+
+mail = Mail(app)
+
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+   form = ContactForm()
+   if form.validate_on_submit():
+       msg = Message(
+           subject=f"F1 ELO Contact Form: {form.subject.data}",
+           recipients=[os.environ['MAIL_RECIPIENT']],
+           body=f"""
+From: {form.name.data} <{form.email.data}>
+Subject: {dict(form.subject.choices).get(form.subject.data)}
+
+Message:
+{form.message.data}
+""",
+           reply_to=form.email.data
+       )
+       try:
+           mail.send(msg)
+           flash('Thank you for your message! We will get back to you soon.', 'success')
+       except Exception as e:
+           app.logger.error(f"Email error: {str(e)}")
+           flash('An error occurred sending your message. Please try again later.', 'danger')
+       return redirect(url_for('contact'))
+   return render_template('contact.html', form=form)
 
 def init_database():
     # Generate the rankings DataFrame
