@@ -10,7 +10,7 @@ from plotly.subplots import make_subplots
 from visualization_utils import DriverVisualizationUtils
 import pandas as pd
 from dotenv import load_dotenv
-import smtplib
+from datetime import datetime
 import numpy as np
 import os
 from forms import ContactForm
@@ -42,6 +42,10 @@ class DriverEloRanking(db.Model):
     last_year = db.Column(db.Integer, nullable=False)
     career_span = db.Column(db.Integer, nullable=False)
     flag_level = db.Column(db.String(50), nullable=False)
+
+@app.context_processor
+def inject_year():
+    return {'current_year': datetime.now().year}
 
 @app.route('/rankings')
 def complete_rankings():
@@ -472,8 +476,8 @@ MAIL_USERNAME = os.environ['MAIL_USERNAME']
 MAIL_PASSWORD = os.environ['MAIL_PASSWORD']
 
 app.config.update(
-   MAIL_SERVER='smtp.gmail.com',
-   MAIL_PORT=587,
+   MAIL_SERVER=MAIL_SERVER,
+   MAIL_PORT=MAIL_PORT,
    MAIL_USE_TLS=True,
    MAIL_USE_SSL=False,
    MAIL_USERNAME=MAIL_USERNAME,
@@ -501,7 +505,7 @@ Message:
        )
        try:
            mail.send(msg)
-           flash('Thank you for your message! We will get back to you soon.', 'success')
+           flash('Thank you for your message! I will get back to you soon.', 'success')
        except Exception as e:
            app.logger.error(f"Email error: {str(e)}")
            flash('An error occurred sending your message. Please try again later.', 'danger')
