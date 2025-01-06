@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Search Results for "{{ query }}"</h2>
+    
+    {% if drivers %}
+        <div class="row g-4">
+            {% for driver in drivers %}
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ driver.driver }}</h5>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge {% if driver.flag_level == 'Rookie' %}bg-info text-dark
+                                  {% elif driver.flag_level == 'Intermediate' %}bg-warning text-dark
+                                  {% elif driver.flag_level == 'Experienced' %}bg-success
+                                  {% elif driver.flag_level == 'Veteran' %}bg-primary
+                                  {% else %}bg-danger{% endif %}">
+                                {{ driver.flag_level }}
+                            </span>
+                            <span class="badge reliability-grade grade-{{ driver.reliability_grade.lower().replace('+', '-plus') }}">
+                                {{ driver.reliability_grade }}
+                            </span>
+                        </div>
+                        <p class="card-text">
+                            <strong>Career:</strong> {{ driver.first_year }} - {{ driver.last_year }}<br>
+                            <strong>ELO Rating:</strong> {{ "%.0f"|format(driver.elo_rating) }}
+                        </p>
+                        <a href="{{ url_for('driver_profile', driver_id=driver.id) }}" class="btn btn-primary">View Profile</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            No drivers found matching your search. Please try a different search term.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

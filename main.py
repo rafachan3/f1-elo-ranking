@@ -282,6 +282,27 @@ def home():
 def methodology():
     return render_template('methodology.html')
 
+@app.route('/search')
+def search_drivers():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return redirect(url_for('home'))
+
+    # Search for exact or close matches
+    exact_match = DriverEloRanking.query.filter(
+        db.func.lower(DriverEloRanking.driver) == db.func.lower(query)
+    ).first()
+
+    if exact_match:
+        return redirect(url_for('driver_profile', driver_id=exact_match.id))
+
+    # If no exact match, search for similar names
+    similar_drivers = DriverEloRanking.query.filter(
+        db.func.lower(DriverEloRanking.driver).like(f"%{query.lower()}%")
+    ).all()
+
+    return render_template('search_results.html', drivers=similar_drivers, query=query)
+
 @app.route('/driver/<int:driver_id>')
 def driver_profile(driver_id):
     driver = DriverEloRanking.query.get_or_404(driver_id)
