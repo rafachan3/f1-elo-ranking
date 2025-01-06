@@ -118,170 +118,15 @@ def home():
     # Fetch data from database
     drivers = DriverEloRanking.query.all()
     df = pd.DataFrame([{col.name: getattr(driver, col.name) for col in DriverEloRanking.__table__.columns} for driver in drivers])
-
-    # Graph 1: Top Drivers by ELO Rating
-    top_drivers = df.nlargest(10, 'elo_rating')
-    bar_chart = px.bar(
-        top_drivers,
-        x='driver',
-        y=top_drivers['elo_rating'].round(0),
-        labels={'elo_rating': 'ELO Rating', 'driver': 'Driver'},
-        text=top_drivers['elo_rating'].round(0)
-    )
-    bar_chart.update_layout(
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        title=None,
-        yaxis_title='ELO Rating',
-        hovermode=False
-    )
-
-    # Graph 2: ELO Trends by Era
-    df['era'] = (df['first_year'] // 10) * 10
-    era_group = df.groupby('era').agg({'elo_rating': ['mean', 'max']}).reset_index()
-    era_group.columns = ['Era', 'Average ELO', 'Top ELO']
-
-    line_chart = go.Figure()
-    line_chart.add_trace(go.Scatter(
-        x=era_group['Era'], 
-        y=era_group['Average ELO'].round(0), 
-        mode='lines+markers',
-        name='Average ELO', 
-        hovertemplate='Era: %{x}<br>Average ELO: %{y:,.0f}'
-    ))
-    line_chart.add_trace(go.Scatter(
-        x=era_group['Era'], 
-        y=era_group['Top ELO'].round(0), 
-        mode='lines+markers',
-        name='Top ELO', 
-        hovertemplate='Era: %{x}<br>Top ELO: %{y:,.0f}'
-    ))
-    line_chart.update_layout(
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        title=None,
-        xaxis_title='Decade',
-        yaxis_title='ELO Rating',
-        xaxis=dict(
-            showgrid=True,
-            gridwidth=1,
-            gridcolor='rgba(128, 128, 128, 0.2)',
-        ),
-        yaxis=dict(
-            showgrid=True,
-            gridwidth=1,
-            gridcolor='rgba(128, 128, 128, 0.2)',
-        )
-    )
-
-    # Graph 3: Driver Reliability Grades Distribution
-    reliability_group = df.groupby('reliability_grade').agg({'elo_rating': 'mean', 'driver': 'count'}).reset_index()
-    reliability_group.columns = ['Reliability Grade', 'Average ELO', 'Driver Count']
-
-    # Define the desired order for reliability grades
-    grade_order = ['A+', 'A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F']
-
-    # Define color mapping
-    grade_colors = {
-        'A+': '#198754',  # Dark green
-        'A': '#28a745',   # Standard green
-        'B+': '#0d6efd',  # Dark blue
-        'B': '#3d8bfd',   # Standard blue
-        'C+': '#fd7e14',  # Dark orange
-        'C': '#ffc107',   # Standard yellow
-        'D+': '#dc3545',  # Dark red
-        'D': '#e35d6a',   # Standard red
-        'F': '#343a40'    # Dark grey
-    }
-
-    # Reorder the DataFrame based on the custom order
-    reliability_group['Reliability Grade'] = pd.Categorical(
-        reliability_group['Reliability Grade'], 
-        categories=grade_order, 
-        ordered=True
-    )
-    reliability_group = reliability_group.sort_values('Reliability Grade')
-
-    pie_chart = px.pie(
-        reliability_group,
-        values='Driver Count',
-        names='Reliability Grade',
-        labels={'Driver Count': 'Driver Count', 'Reliability Grade': 'Reliability Grade'},
-        category_orders={'Reliability Grade': grade_order},
-        color='Reliability Grade',
-        color_discrete_map=grade_colors
-    )
-    pie_chart.update_traces(
-        hovertemplate='Grade: %{label}<br>Count: %{value:,.0f}'
-    )
-    pie_chart.update_layout(
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        title=None
-    )
-
-    # Graph 4: Career Longevity vs. ELO
-    # Calculate average ELO rating and count for each career span length
-    career_span_data = df.groupby('career_span').agg({
-        'elo_rating': 'mean',
-        'driver': 'count'  # Count number of drivers
-    }).reset_index()
-
-    career_span_data.columns = ['career_span', 'avg_elo', 'driver_count']
-    career_span_data['avg_elo'] = career_span_data['avg_elo'].round(0)
-
-    # Create a color scale that can handle any number of points
-    n_points = len(career_span_data)
-    colors = [f'hsl({h},70%,50%)' for h in np.linspace(0, 300, n_points)]
-
-    scatter_chart = go.Figure()
-
-    # Calculate circle sizes with a better scaling function
-    min_size = 10
-    max_size = 50
-    min_count = career_span_data['driver_count'].min()
-    max_count = career_span_data['driver_count'].max()
-
-    def scale_size(count):
-        if max_count == min_count:
-            return (min_size + max_size) / 2
-        scaled = (count - min_count) / (max_count - min_count)
-        return min_size + (max_size - min_size) * scaled
-
-    career_span_data['point_size'] = career_span_data['driver_count'].apply(scale_size)
-
-    scatter_chart.add_trace(go.Scatter(
-        x=career_span_data['career_span'],
-        y=career_span_data['avg_elo'],
-        mode='markers',
-        marker=dict(
-            size=career_span_data['point_size'],
-            color=colors,
-            line=dict(width=1, color='darkgray')
-        ),
-        hovertemplate='Career Span: %{x} years<br>Average ELO: %{y:,.0f}<br>Drivers: %{customdata}<extra></extra>',
-        customdata=career_span_data['driver_count']
-    ))
-
-    scatter_chart.update_layout(
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        title=None,
-        showlegend=False,
-        xaxis=dict(
-            showgrid=True,
-            gridwidth=1,
-            gridcolor='rgba(128, 128, 128, 0.2)',
-            title='Career Span (Years)',
-            range=[-1, career_span_data['career_span'].max() + 1]
-        ),
-        yaxis=dict(
-            showgrid=True,
-            gridwidth=1,
-            gridcolor='rgba(128, 128, 128, 0.2)',
-            title='ELO Rating'
-        )
-    )
+    
+    # Initialize visualization utils
+    viz_utils = DriverVisualizationUtils()
+    
+    # Generate all charts
+    bar_chart = viz_utils.create_top_drivers_chart(df)
+    line_chart = viz_utils.create_era_trends_chart(df)
+    pie_chart = viz_utils.create_reliability_distribution_chart(df)
+    scatter_chart = viz_utils.create_career_longevity_chart(df)
 
     return render_template('index.html',
                            bar_chart=bar_chart.to_html(full_html=False),
@@ -404,70 +249,23 @@ def compare_drivers():
         for driver_id in selected_ids:
             driver = DriverEloRanking.query.get(driver_id)
             if driver:
-                print(f"Processing driver {driver.driver} (ID: {driver.f1_driver_id})")
-                print(f"Database ELO: {driver.elo_rating}")
-                
-                # Get race-by-race progression
                 driver_data = processor.get_driver_race_progression(driver.f1_driver_id)
                 if not driver_data.empty:
-                    print(f"Last calculated ELO: {driver_data['elo_rating'].iloc[-1]}")
                     driver_data['Driver'] = driver.driver
                     comparison_data.append(driver_data)
         
         if comparison_data:
             comparison_data = pd.concat(comparison_data, ignore_index=True)
     
+    viz_utils = DriverVisualizationUtils()
+    comparison_chart = viz_utils.create_comparison_chart(comparison_data).to_html(full_html=False) if comparison_data is not None else None
+    
     return render_template(
         'compare.html',
         drivers=drivers,
         selected_ids=selected_ids,
-        comparison_chart=create_comparison_chart(comparison_data) if comparison_data is not None else None
+        comparison_chart=comparison_chart
     )
-
-
-def create_comparison_chart(comparison_data):
-    if comparison_data.empty:
-        return None
-        
-    fig = go.Figure()
-    
-    for driver in comparison_data['Driver'].unique():
-        driver_data = comparison_data[comparison_data['Driver'] == driver]
-        
-        fig.add_trace(go.Scatter(
-            x=driver_data['race_number'],
-            y=driver_data['elo_rating'],
-            name=driver,
-            mode='lines+markers',
-            hovertemplate=(
-                'Race: %{customdata[0]}<br>' +
-                'Date: %{customdata[1]}<br>' +
-                'ELO: %{y:.0f}<br>' +
-                'Position: %{customdata[2]}'
-            ),
-            customdata=driver_data[['race_name', 'race_date', 'position']]
-        ))
-    
-    fig.update_layout(
-        title='Driver ELO Rating Progression by Race',
-        xaxis_title='Race Number',
-        yaxis_title='ELO Rating',
-        hovermode='closest',
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        xaxis=dict(
-            showgrid=True,
-            gridwidth=1,
-            gridcolor='rgba(128,128,128,0.2)',
-        ),
-        yaxis=dict(
-            showgrid=True,
-            gridwidth=1,
-            gridcolor='rgba(128,128,128,0.2)',
-        )
-    )
-    
-    return fig.to_html(full_html=False)
 
 # Mail config
 MAIL_SERVER=os.environ['MAIL_SERVER']
