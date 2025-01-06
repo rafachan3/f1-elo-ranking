@@ -352,6 +352,90 @@ def driver_profile(driver_id):
             return f"Error processing driver data: {str(e)}", 500
     else:
         return "No career data found for driver", 404
+    
+@app.route('/compare', methods=['GET'])
+def compare_drivers():
+    # Get all drivers for the dropdown
+    drivers = DriverEloRanking.query.order_by(DriverEloRanking.driver).all()
+    
+    # Get selected driver IDs from query parameters
+    selected_ids = request.args.getlist('drivers')
+    selected_ids = [int(id) for id in selected_ids if id.isdigit()]
+    
+    comparison_data = None
+    if selected_ids:
+        processor = F1DataProcessor()
+        processor.load_data()
+        processor.process_races()
+        
+        comparison_data = []
+        for driver_id in selected_ids:
+            driver = DriverEloRanking.query.get(driver_id)
+            if driver:
+                print(f"Processing driver {driver.driver} (ID: {driver.f1_driver_id})")
+                print(f"Database ELO: {driver.elo_rating}")
+                
+                # Get race-by-race progression
+                driver_data = processor.get_driver_race_progression(driver.f1_driver_id)
+                if not driver_data.empty:
+                    print(f"Last calculated ELO: {driver_data['elo_rating'].iloc[-1]}")
+                    driver_data['Driver'] = driver.driver
+                    comparison_data.append(driver_data)
+        
+        if comparison_data:
+            comparison_data = pd.concat(comparison_data, ignore_index=True)
+    
+    return render_template(
+        'compare.html',
+        drivers=drivers,
+        selected_ids=selected_ids,
+        comparison_chart=create_comparison_chart(comparison_data) if comparison_data is not None else None
+    )
+
+
+def create_comparison_chart(comparison_data):
+    if comparison_data.empty:
+        return None
+        
+    fig = go.Figure()
+    
+    for driver in comparison_data['Driver'].unique():
+        driver_data = comparison_data[comparison_data['Driver'] == driver]
+        
+        fig.add_trace(go.Scatter(
+            x=driver_data['race_number'],
+            y=driver_data['elo_rating'],
+            name=driver,
+            mode='lines+markers',
+            hovertemplate=(
+                'Race: %{customdata[0]}<br>' +
+                'Date: %{customdata[1]}<br>' +
+                'ELO: %{y:.0f}<br>' +
+                'Position: %{customdata[2]}'
+            ),
+            customdata=driver_data[['race_name', 'race_date', 'position']]
+        ))
+    
+    fig.update_layout(
+        title='Driver ELO Rating Progression by Race',
+        xaxis_title='Race Number',
+        yaxis_title='ELO Rating',
+        hovermode='closest',
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        xaxis=dict(
+            showgrid=True,
+            gridwidth=1,
+            gridcolor='rgba(128,128,128,0.2)',
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridwidth=1,
+            gridcolor='rgba(128,128,128,0.2)',
+        )
+    )
+    
+    return fig.to_html(full_html=False)
 
 def init_database():
     # Generate the rankings DataFrame

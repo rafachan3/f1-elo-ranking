@@ -246,3 +246,53 @@ class F1DataProcessor:
 
         rankings_df = pd.DataFrame(final_stats)
         return rankings_df.sort_values('Elo Rating', ascending=False)
+
+    def get_driver_race_progression(self, driver_id):
+        """Get the race-by-race ELO rating progression for a specific driver."""
+        if driver_id not in self.drivers_dict:
+            return pd.DataFrame()
+            
+        driver = self.drivers_dict[driver_id]
+        if driver.first_year is None:
+            return pd.DataFrame()
+
+        # Get all races for this driver, excluding DNS
+        driver_races = self.results[
+            (self.results['driverId'] == driver_id) &
+            (~self.results['statusId'].isin(self.non_start_status_ids)) &
+            (self.results['grid'] > 0)  # Exclude races where driver did not participate
+        ].copy()
+        
+        # Add race information
+        driver_races = pd.merge(
+            driver_races,
+            self.races[['raceId', 'name', 'date', 'year']],
+            on='raceId'
+        )
+        
+        # Sort by date
+        driver_races = driver_races.sort_values('date')
+        driver_races['race_number'] = range(1, len(driver_races) + 1)
+
+        # Ensure we use the complete rating history
+        ratings = list(driver.rating_history)
+        if not ratings:
+            ratings = [self.elo_calculator.BASE_ELO]
+        
+        # Extend ratings if needed
+        while len(ratings) < len(driver_races):
+            ratings.append(ratings[-1])
+            
+        # Trim ratings if we have too many
+        if len(ratings) > len(driver_races):
+            ratings = ratings[:len(driver_races)]
+
+        driver_races['elo_rating'] = ratings
+        driver_races['race_name'] = driver_races['name']
+        driver_races['race_date'] = driver_races['date']
+        driver_races['position'] = driver_races['positionOrder']
+        
+        return driver_races[[
+            'race_number', 'race_name', 'race_date', 
+            'elo_rating', 'position', 'year'
+        ]]

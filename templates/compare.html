@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Driver Comparison</h1>
+    
+    <!-- Driver Selection Form -->
+    <form class="mb-4" method="GET" action="{{ url_for('compare_drivers') }}">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">Driver 1</label>
+                <select class="form-select" name="drivers" required>
+                    <option value="">Select a driver...</option>
+                    {% for driver in drivers %}
+                    <option value="{{ driver.id }}"     {% if driver.id == selected_ids[loop.index0] %}selected{% endif %}>
+                        {{ driver.driver }} ({{ driver.first_year }}-{{ driver.last_year }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label">Driver 2</label>
+                <select class="form-select" name="drivers" required>
+                    <option value="">Select a driver...</option>
+                    {% for driver in drivers %}
+                    <option value="{{ driver.id }}" {% if driver.id in selected_ids %}selected{% endif %}>
+                        {{ driver.driver }} ({{ driver.first_year }}-{{ driver.last_year }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Compare</button>
+            </div>
+        </div>
+        <div class="mt-2">
+            <button type="button" id="addDriver" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-plus-circle"></i> Add Another Driver
+            </button>
+        </div>
+    </form>
+    
+    {% if comparison_chart %}
+    <!-- Comparison Chart -->
+    <div class="card">
+        <div class="card-body">
+            {{ comparison_chart | safe }}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.getElementById('addDriver').addEventListener('click', function() {
+    const row = document.querySelector('.row');
+    const newCol = document.createElement('div');
+    newCol.className = 'col-md-5 mt-3';
+    newCol.innerHTML = `
+        <label class="form-label">Driver ${row.children.length}</label>
+        <select class="form-select" name="drivers" required>
+            <option value="">Select a driver...</option>
+            {% for driver in drivers %}
+            <option value="{{ driver.id }}">
+                {{ driver.driver }} ({{ driver.first_year }}-{{ driver.last_year }})
+            </option>
+            {% endfor %}
+        </select>
+    `;
+    row.insertBefore(newCol, row.lastElementChild);
+});
+</script>
+{% endblock %}
