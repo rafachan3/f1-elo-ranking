@@ -9,16 +9,17 @@ import pandas as pd
 from dotenv import load_dotenv
 from datetime import datetime
 import os
+import requests
 from forms import ContactForm
 
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ["FLASK_SECRET_KEY"]
+app.config['SECRET_KEY'] = os.environ.get("FLASK_SECRET_KEY")
 Bootstrap5(app)
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///f1-driver-elo-rankings.db"
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URI", "sqlite:///f1-driver-elo-rankings.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -279,10 +280,10 @@ def compare_drivers():
     )
 
 # Mail config
-MAIL_SERVER=os.environ['MAIL_SERVER']
-MAIL_PORT=os.environ['MAIL_PORT']
-MAIL_USERNAME = os.environ['MAIL_USERNAME']
-MAIL_PASSWORD = os.environ['MAIL_PASSWORD']
+MAIL_SERVER=os.environ.get('MAIL_SERVER')
+MAIL_PORT=os.environ.get('MAIL_PORT')
+MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
 
 app.config.update(
    MAIL_SERVER=MAIL_SERVER,
@@ -302,7 +303,7 @@ def contact():
    if form.validate_on_submit():
        msg = Message(
            subject=f"F1 ELO Contact Form: {form.subject.data}",
-           recipients=[os.environ['MAIL_RECIPIENT']],
+           recipients=[os.environ.get('MAIL_RECIPIENT')],
            body=f"""
 From: {form.name.data} <{form.email.data}>
 Subject: {dict(form.subject.choices).get(form.subject.data)}
