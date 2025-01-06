@@ -28,4 +28,4 @@ class ContactForm(FlaskForm):
         Length(min=10, max=1000, message="Message must be between 10 and 1000 characters")
     ])
 
-    submit = SubmitField('Submit')
+    submit = SubmitField('Submit', render_kw={'class': 'btn btn-danger'})

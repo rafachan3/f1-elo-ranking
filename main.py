@@ -4,14 +4,10 @@ from flask_bootstrap import Bootstrap5
 from flask_mail import Mail, Message
 from data_processor import F1DataProcessor
 from database_utils import update_database_from_df
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from visualization_utils import DriverVisualizationUtils
 import pandas as pd
 from dotenv import load_dotenv
 from datetime import datetime
-import numpy as np
 import os
 from forms import ContactForm
 
@@ -81,7 +77,7 @@ def complete_rankings():
     if search_query:
         query = query.filter(DriverEloRanking.driver.ilike(f"%{search_query}%"))
 
-     # Get filtered and ordered results
+    # Get filtered and ordered results
     drivers = query.order_by(DriverEloRanking.elo_rating.desc()).all()
     
     # Add ranking to each driver
@@ -119,20 +115,35 @@ def home():
     drivers = DriverEloRanking.query.all()
     df = pd.DataFrame([{col.name: getattr(driver, col.name) for col in DriverEloRanking.__table__.columns} for driver in drivers])
     
+    # Initialize F1DataProcessor to get actual processed races
+    processor = F1DataProcessor()
+    processor.load_data()
+    # Get races after filtering (excluding Indy 500 and any other filtered races)
+    races_df = processor.races
+    
+    # Calculate statistics
+    stats = {
+        'drivers_count': len(df),
+        'years_covered': df['last_year'].max() - df['first_year'].min(),
+        'races_count': len(races_df),
+        'data_points': len(df) * len(df.columns)
+    }
+    
     # Initialize visualization utils
     viz_utils = DriverVisualizationUtils()
     
-    # Generate all charts
+    # Generate charts
     bar_chart = viz_utils.create_top_drivers_chart(df)
     line_chart = viz_utils.create_era_trends_chart(df)
     pie_chart = viz_utils.create_reliability_distribution_chart(df)
     scatter_chart = viz_utils.create_career_longevity_chart(df)
 
     return render_template('index.html',
-                           bar_chart=bar_chart.to_html(full_html=False),
-                           line_chart=line_chart.to_html(full_html=False),
-                           pie_chart=pie_chart.to_html(full_html=False),
-                           scatter_chart=scatter_chart.to_html(full_html=False))
+                         stats=stats,
+                         bar_chart=bar_chart.to_html(full_html=False),
+                         line_chart=line_chart.to_html(full_html=False),
+                         pie_chart=pie_chart.to_html(full_html=False),
+                         scatter_chart=scatter_chart.to_html(full_html=False))
 
 @app.route('/methodology')
 def methodology():

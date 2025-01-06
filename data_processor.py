@@ -44,7 +44,6 @@ class F1DataProcessor:
 
         self.races = self.races[self.races['name'] != 'Indianapolis 500']
 
-        print("Creating driver objects...")
         # Initialize driver objects
         for _, driver_row in self.drivers.iterrows():
             driver_id = driver_row['driverId']
@@ -57,7 +56,6 @@ class F1DataProcessor:
         driver = self.drivers_dict.get(driver_id)
         
         if not driver or driver.first_year is None or driver.last_year is None:
-            print(f"Driver {driver_id} not found or missing year data")
             return pd.DataFrame(columns=['year', 'driverId', 'elo_rating'])
         
         # Create progression data
@@ -75,8 +73,6 @@ class F1DataProcessor:
         
         # Verify array lengths
         if len(years) != len(ratings):
-            print(f"Warning: Mismatch in array lengths for driver {driver_id}")
-            print(f"Years: {len(years)}, Ratings: {len(ratings)}")
             # Adjust ratings array if necessary
             if len(ratings) > len(years):
                 ratings = ratings[-len(years):]
@@ -106,7 +102,6 @@ class F1DataProcessor:
         return pd.DataFrame(columns=['year', 'driverId', 'elo_rating'])
 
     def process_races(self):
-        print("Starting race processing")
         races_sorted = self.races.sort_values(by=["year", "round"])
         race_results = self.results[['raceId', 'driverId', 'constructorId', 'positionOrder', 'statusId', 'grid', 'position', 'laps']]
 
