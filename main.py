@@ -322,28 +322,32 @@ Message:
        return redirect(url_for('contact'))
    return render_template('contact.html', form=form)
 
-def init_database():
-    # Generate the rankings DataFrame
-    processor = F1DataProcessor()
-    processor.load_data()
-    processor.process_races()
-    rankings = processor.calculate_rankings()
-
-    # Create tables and populate database
-    db.create_all()  # Create the tables
-    update_database_from_df(db, DriverEloRanking, rankings)  # Populate the database
-    print("Database created and populated successfully.")
+def init_db(app):
+    """Initialize the database and create all tables"""
+    with app.app_context():
+        try:
+            # Create all tables
+            db.create_all()
+            
+            # Check if we need to populate the data
+            if not DriverEloRanking.query.first():
+                from data_processor import F1DataProcessor
+                from database_utils import update_database_from_df
+                
+                # Generate the rankings DataFrame
+                processor = F1DataProcessor()
+                processor.load_data()
+                processor.process_races()
+                rankings = processor.calculate_rankings()
+                
+                # Populate the database
+                update_database_from_df(db, DriverEloRanking, rankings)
+                
+            print("Database initialized successfully!")
+            return True
+        except Exception as e:
+            print(f"Error initializing database: {str(e)}")
+            return False
 
 if __name__ == "__main__":
-    # Check if the database file exists in the instance folder
-    db_path = os.path.join(app.instance_path, 'f1-driver-elo-rankings.db')
-    
-    if not os.path.exists(db_path):
-        print("Database not found. Creating and populating it for the first time...")
-        with app.app_context():
-            init_database()
-    else:
-        print("Database already exists. No action needed. Update the database manually if needed.")  
-
-    # Start the Flask development server
-    app.run(debug=True)
+    init_db(app)
