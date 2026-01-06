@@ -1,20 +1,64 @@
-from main import app, db, DriverEloRanking
-from data_processor import F1DataProcessor
-from database_utils import update_database_from_df
+"""
+Script to update the database with fresh ELO calculations.
 
-def update_rankings():
+Run this script to recalculate all ELO ratings and update the database.
+This is useful when:
+- New race data is added to the CSV files
+- You want to refresh all calculations
+- You need to rebuild the database
+
+Usage:
+    python update_db.py
+    
+For Heroku:
+    heroku run python update_db.py
+"""
+from main import app, db, populate_database, DriverEloRanking, DriverEloProgression, RaceResult, DriverTeamHistory, AppStats
+
+
+def update_rankings(force_rebuild=False):
+    """Update the database with fresh calculations.
+    
+    Args:
+        force_rebuild: If True, clears all existing data before repopulating.
+    """
     with app.app_context():
         print("Starting database update...")
         
-        # Generate new rankings
-        processor = F1DataProcessor()
-        processor.load_data()
-        processor.process_races()
-        rankings = processor.calculate_rankings()
+        if force_rebuild:
+            print("Force rebuild requested. Clearing existing data...")
+            RaceResult.query.delete()
+            DriverTeamHistory.query.delete()
+            DriverEloProgression.query.delete()
+            DriverEloRanking.query.delete()
+            AppStats.query.delete()
+            db.session.commit()
         
-        # Update database with new rankings
-        update_database_from_df(db, DriverEloRanking, rankings)
+        # Repopulate database
+        populate_database()
+        
         print("Database update completed successfully.")
+        
+        # Print summary
+        driver_count = DriverEloRanking.query.count()
+        progression_count = DriverEloProgression.query.count()
+        race_count = RaceResult.query.count()
+        
+        print(f"\nDatabase Summary:")
+        print(f"  - Drivers: {driver_count}")
+        print(f"  - ELO Progression Records: {progression_count}")
+        print(f"  - Race Results: {race_count}")
+
 
 if __name__ == "__main__":
-    update_rankings()
+    import sys
+    
+    force = '--force' in sys.argv or '-f' in sys.argv
+    
+    if force:
+        confirm = input("This will delete all existing data. Are you sure? (yes/no): ")
+        if confirm.lower() != 'yes':
+            print("Aborted.")
+            sys.exit(0)
+    
+    update_rankings(force_rebuild=force)
