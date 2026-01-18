@@ -148,16 +148,13 @@ class F1DataProcessor:
             # First filter out definite non-starts
             race_data = race_data[~race_data['statusId'].isin(self.non_start_status_ids)]
 
-            # Handle withdrawals based on era and circumstances
+            # Handle withdrawals - only count as race start if driver completed at least 1 lap
+            # A withdrawal with 0 laps means the driver did not start the race
             withdrawal_mask = race_data['statusId'].isin(self.withdrawal_status_ids)
             if withdrawal_mask.any():
-                era_adjustments = (
-                    # Pre-1970s withdrawals with grid position likely mean race start
-                    ((race_year < 1970) & (race_data['grid'] > 0)) |
-                    # In modern era, must have completed at least one lap to count
-                    ((race_year >= 1970) & (race_data['laps'] > 0))
-                )
-                race_data = race_data[~withdrawal_mask | era_adjustments]
+                # Only count withdrawals where driver completed at least 1 lap (actually started)
+                started_race = race_data['laps'] > 0
+                race_data = race_data[~withdrawal_mask | started_race]
                 
             # Increment race count for ALL drivers in this race
             processed_drivers = set()
