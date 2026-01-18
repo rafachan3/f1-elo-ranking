@@ -1,43 +1,28 @@
-# Python cache
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Local SQLite database
-instance/
-*.db
-
-# Virtual environment
-venv/
-.venv/
-env/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Testing
-.pytest_cache/
-htmlcov/
-
-# Git
-.git/
-.gitignore
-
-# Documentation
-*.md
-LICENSE
-
-# Local development files
-.env
-.env.local
-
-# Heroku files (not needed for Vercel)
-Procfile
-runtime.txt
-
-# Seed script and update script (run locally, not on Vercel)
+# Data processing files (not needed at runtime - DB already populated)
+data_processor.py
+elo_calculator.py
+confidence_calculator.py
+driver.py
+cache_manager.py
+database_utils.py
 seed_neon.py
 update_db.py
+
+# Data files (already in database)
+data/
+
+# Local development files
+instance/
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Documentation
+README.md
+LICENSE
+
+# Local server files
+wsgi.py
+Procfile
+runtime.txt

@@ -1,6 +1,3 @@
-import numpy as np
-from scipy.stats import norm
-
 class EloCalculator:
     """
     Calculator for Formula 1 driver ELO ratings with configurable parameters.
