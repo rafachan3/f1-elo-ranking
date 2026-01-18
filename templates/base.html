@@ -35,16 +35,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ url_for('complete_rankings')}}">Rankings</a>
+                        <a class="nav-link active" href="{{ url_for('rankings.complete_rankings')}}">Rankings</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/methodology">Methodology</a>
+                        <a class="nav-link" href="{{ url_for('main.methodology') }}">Methodology</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('compare_drivers') }}">Compare</a>
+                        <a class="nav-link" href="{{ url_for('drivers.compare_drivers') }}">Compare</a>
                     </li>
                 </ul>
-                <form class="d-flex" action="{{ url_for('search_drivers') }}" method="GET">
+                <form class="d-flex" action="{{ url_for('main.search_drivers') }}" method="GET">
                     <input class="form-control me-2" type="search" name="q" placeholder="Search driver..." required>
                     <button class="btn btn-outline-light" type="submit">Search</button>
                 </form>

@@ -1,12 +1,17 @@
 """
 F1 data processor for loading and processing race data.
 """
+import os
 import pandas as pd
 from itertools import combinations
 
 from core.driver import Driver
 from core.elo_calculator import EloCalculator
 from core.confidence_calculator import ConfidenceCalculator
+
+# Get the project root directory
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_DEFAULT_DATA_PATH = os.path.join(_PROJECT_ROOT, 'data')
 
 
 class F1DataProcessor:
@@ -46,13 +51,16 @@ class F1DataProcessor:
         # Define Indianapolis 500 race IDs (not part of F1 championship)
         self.indy_500_race_ids = {748, 757, 768, 778, 786, 794, 800, 809, 818, 826, 835}
         
-    def load_data(self, data_path='./data'):
+    def load_data(self, data_path=None):
         """
         Load all CSV data files.
         
         Args:
-            data_path: Path to directory containing CSV files
+            data_path: Path to directory containing CSV files. 
+                      Defaults to project's data/ directory.
         """
+        if data_path is None:
+            data_path = _DEFAULT_DATA_PATH
         self.circuits = pd.read_csv(f'{data_path}/circuits.csv')
         self.constructors = pd.read_csv(f'{data_path}/constructors.csv')
         self.drivers = pd.read_csv(f'{data_path}/drivers.csv')

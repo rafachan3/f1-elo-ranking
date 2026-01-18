@@ -1,6 +1,7 @@
 """
 Flask application factory and extensions.
 """
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap5
@@ -22,10 +23,13 @@ def create_app(config_object=None):
     Returns:
         Flask application instance.
     """
+    # Get the root directory of the project
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
     app = Flask(
         __name__,
-        template_folder='../templates',
-        static_folder='../static'
+        template_folder=os.path.join(root_dir, 'templates'),
+        static_folder=os.path.join(root_dir, 'static')
     )
     
     # Load configuration

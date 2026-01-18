@@ -27,7 +27,7 @@
                             <strong>Career:</strong> {{ driver.first_year }} - {{ driver.last_year }}<br>
                             <strong>ELO Rating:</strong> {{ "%.0f"|format(driver.elo_rating) }}
                         </p>
-                        <a href="{{ url_for('driver_profile', driver_id=driver.id) }}" class="btn btn-primary">View Profile</a>
+                        <a href="{{ url_for('drivers.driver_profile', driver_id=driver.id) }}" class="btn btn-primary">View Profile</a>
                     </div>
                 </div>
             </div>
