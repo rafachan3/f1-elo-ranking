@@ -13,7 +13,17 @@ Usage:
 For Heroku:
     heroku run python update_db.py
 """
-from main import app, db, populate_database, DriverEloRanking, DriverEloProgression, RaceResult, DriverTeamHistory, AppStats
+import sys
+
+from app import create_app, db
+from app.models import (
+    DriverEloRanking, 
+    DriverEloProgression, 
+    RaceResult, 
+    DriverTeamHistory, 
+    AppStats
+)
+from app.services import populate_database
 
 
 def update_rankings(force_rebuild=False):
@@ -22,6 +32,8 @@ def update_rankings(force_rebuild=False):
     Args:
         force_rebuild: If True, clears all existing data before repopulating.
     """
+    app = create_app()
+    
     with app.app_context():
         print("Starting database update...")
         
@@ -51,8 +63,6 @@ def update_rankings(force_rebuild=False):
 
 
 if __name__ == "__main__":
-    import sys
-    
     force = '--force' in sys.argv or '-f' in sys.argv
     
     if force:

@@ -18,10 +18,10 @@
     </thead>
     <tbody>
         {% for driver in drivers %}
-        <tr class="driver-row" onclick="window.location='{{ url_for('driver_profile', driver_id=driver.id) }}'" style="cursor: pointer;">
+        <tr class="driver-row" onclick="window.location='{{ url_for('drivers.driver_profile', driver_id=driver.id) }}'" style="cursor: pointer;">
             <td class="text-center fw-bold">{{ driver.ranking }}</td>
             <td class="fw-bold text-start">
-                <a href="{{ url_for('driver_profile', driver_id=driver.id) }}" 
+                <a href="{{ url_for('drivers.driver_profile', driver_id=driver.id) }}" 
                    class="text-decoration-none text-dark hover-primary">
                     {{ driver.driver }}
                 </a>

@@ -1,6 +1,22 @@
+"""
+Driver entity for ELO rating tracking.
+"""
 import numpy as np
 
+
 class Driver:
+    """
+    Represents an F1 driver with ELO rating history.
+    
+    Attributes:
+        driver_id: Unique identifier for the driver
+        rating: Current ELO rating
+        race_count: Number of races completed
+        rating_history: List of historical ratings
+        first_year: First year of racing
+        last_year: Last year of racing
+    """
+    
     def __init__(self, driver_id, base_elo=1500):
         self.driver_id = driver_id
         self.rating = base_elo
@@ -10,32 +26,32 @@ class Driver:
         self.last_year = None
     
     def update_rating(self, new_rating):
-        """Update driver's rating and rating history"""
+        """Update driver's rating and rating history."""
         self.rating = new_rating
         self.rating_history.append(new_rating)
         
     def update_years(self, race_year):
-        """Update driver's first and last year"""
+        """Update driver's first and last year."""
         if not self.first_year:
             self.first_year = race_year
         self.last_year = race_year
         
     def increment_race_count(self):
-        """Increment the number of races for this driver"""
+        """Increment the number of races for this driver."""
         self.race_count += 1
         
     def get_rating_volatility(self):
-        """Calculate rating volatility"""
+        """Calculate rating volatility (standard deviation of ratings)."""
         return np.std(self.rating_history) if len(self.rating_history) > 1 else 0
         
     def get_career_span(self):
-        """Calculate career span in years"""
+        """Calculate career span in years."""
         if self.first_year and self.last_year:
             return self.last_year - self.first_year
         return 0
 
     def get_confidence_interval(self, confidence_calculator):
-        """Calculate confidence interval using provided calculator"""
+        """Calculate confidence interval using provided calculator."""
         rating_volatility = self.get_rating_volatility()
         year_span = self.get_career_span()
         return confidence_calculator.calculate_confidence_interval(
@@ -48,8 +64,10 @@ class Driver:
     def get_flag_level(self):
         """
         Determine driver classification based on race count and era.
-        Pre-1980 Era has lower thresholds due to fewer races per season and shorter careers.
-        Modern Era (1980-Present) has higher thresholds reflecting longer seasons and careers.
+        
+        Pre-1980 Era has lower thresholds due to fewer races per season 
+        and shorter careers. Modern Era (1980-Present) has higher thresholds 
+        reflecting longer seasons and careers.
         """
         # If first_year is None, default to modern era classification
         if not self.first_year or self.first_year >= 1980:
@@ -78,13 +96,13 @@ class Driver:
                 return 'Legend'
 
     def to_stats_dict(self, calculator, confidence_calculator, drivers_df, confidence_score, confidence_grade):
-        """Convert driver data to statistics dictionary"""
+        """Convert driver data to statistics dictionary."""
         lower_bound, upper_bound = self.get_confidence_interval(confidence_calculator)
         driver_info = drivers_df[drivers_df['driverId'] == self.driver_id].iloc[0]
         
         return {
             'Driver': f"{driver_info['forename']} {driver_info['surname']}",
-            'f1_driver_id': self.driver_id,  # Changed from driver_id
+            'f1_driver_id': self.driver_id,
             'Elo Rating': self.rating,
             'Lower Bound': round(lower_bound, 1),
             'Upper Bound': round(upper_bound, 1),
@@ -95,5 +113,5 @@ class Driver:
             'First Year': self.first_year,
             'Last Year': self.last_year,
             'Career Span': self.get_career_span(),
-            'Flag Level': self.get_flag_level()  # Add flag level to stats dict
+            'Flag Level': self.get_flag_level()
         }
