@@ -81,32 +81,20 @@ class F1DataProcessor:
         self.status_mapping = dict(zip(self.status['statusId'], self.status['status']))
 
     def get_driver_elo_progression(self, driver_id):
-        """Get the ELO rating progression for a specific driver."""
+        """Get the ELO rating progression for a specific driver (end-of-year ratings)."""
         driver = self.drivers_dict.get(driver_id)
         
         if not driver or driver.first_year is None or driver.last_year is None:
             return pd.DataFrame(columns=['year', 'driverId', 'elo_rating'])
         
-        # Create progression data
-        years = list(range(driver.first_year, driver.last_year + 1))
-        num_years = len(years)
+        # Get yearly ELO progression using the Driver's method
+        yearly_progression = driver.get_yearly_elo_progression(self.elo_calculator.BASE_ELO)
         
-        # Ensure we have enough ratings
-        if len(driver.rating_history) < num_years:
-            # If we don't have enough ratings, pad with the base ELO
-            ratings = [self.elo_calculator.BASE_ELO] * (num_years - len(driver.rating_history))
-            ratings.extend(driver.rating_history)
-        else:
-            # Take the last N ratings where N is number of years
-            ratings = driver.rating_history[-num_years:]
+        if not yearly_progression:
+            return pd.DataFrame(columns=['year', 'driverId', 'elo_rating'])
         
-        # Verify array lengths
-        if len(years) != len(ratings):
-            # Adjust ratings array if necessary
-            if len(ratings) > len(years):
-                ratings = ratings[-len(years):]
-            else:
-                ratings.extend([ratings[-1]] * (len(years) - len(ratings)))
+        years = [entry[0] for entry in yearly_progression]
+        ratings = [entry[1] for entry in yearly_progression]
         
         data = {
             'year': years,
@@ -187,12 +175,16 @@ class F1DataProcessor:
                     continue  # Only skips teammate comparison, not race counting
 
                 for row_a, row_b in combinations(group.itertuples(index=False), 2):
-                    self._process_driver_pair(row_a, row_b, race_year, season_races)
+                    self._process_driver_pair(row_a, row_b, race_year, race_id, season_races)
 
-    def _process_driver_pair(self, row_a, row_b, race_year, season_races):
+    def _process_driver_pair(self, row_a, row_b, race_year, race_id, season_races):
         """Process a pairwise ELO update between two teammates."""
         driver_a = self.drivers_dict[row_a.driverId]
         driver_b = self.drivers_dict[row_b.driverId]
+        
+        # Set current race context for proper rating history tracking
+        driver_a.set_current_race(race_year, race_id)
+        driver_b.set_current_race(race_year, race_id)
 
         k_factor_a = self.elo_calculator.calculate_k_factor(
             driver_a.race_count, 
@@ -301,20 +293,24 @@ class F1DataProcessor:
         driver_races = driver_races.sort_values('date')
         driver_races['race_number'] = range(1, len(driver_races) + 1)
 
-        # Ensure we use the complete rating history
-        ratings = list(driver.rating_history)
-        if not ratings:
-            ratings = [self.elo_calculator.BASE_ELO]
+        # Get race-by-race ELO progression from driver's history
+        race_progression = driver.get_race_elo_progression()
         
-        # Extend ratings if needed
-        while len(ratings) < len(driver_races):
-            ratings.append(ratings[-1])
-            
-        # Trim ratings if we have too many
-        if len(ratings) > len(driver_races):
-            ratings = ratings[:len(driver_races)]
-
-        driver_races['elo_rating'] = ratings
+        # Create a mapping of race_id to ELO rating
+        race_elo_map = {race_id: rating for (year, race_id, rating) in race_progression}
+        
+        # Map ELO ratings to races, using base ELO for races without teammate comparisons
+        base_elo = self.elo_calculator.BASE_ELO
+        last_elo = base_elo
+        elo_ratings = []
+        
+        for _, row in driver_races.iterrows():
+            race_id = row['raceId']
+            if race_id in race_elo_map:
+                last_elo = race_elo_map[race_id]
+            elo_ratings.append(last_elo)
+        
+        driver_races['elo_rating'] = elo_ratings
         driver_races['race_name'] = driver_races['name']
         driver_races['race_date'] = driver_races['date']
         driver_races['position'] = driver_races['positionOrder']

@@ -21,14 +21,25 @@ class Driver:
         self.driver_id = driver_id
         self.rating = base_elo
         self.race_count = 0
-        self.rating_history = []
+        self.rating_history = []  # List of (year, race_id, rating) tuples
         self.first_year = None
         self.last_year = None
+        self._current_race_year = None
+        self._current_race_id = None
+    
+    def set_current_race(self, year, race_id):
+        """Set the current race context for rating updates."""
+        self._current_race_year = year
+        self._current_race_id = race_id
     
     def update_rating(self, new_rating):
-        """Update driver's rating and rating history."""
+        """Update driver's rating and rating history with year/race context."""
         self.rating = new_rating
-        self.rating_history.append(new_rating)
+        self.rating_history.append((
+            self._current_race_year,
+            self._current_race_id,
+            new_rating
+        ))
         
     def update_years(self, race_year):
         """Update driver's first and last year."""
@@ -42,13 +53,67 @@ class Driver:
         
     def get_rating_volatility(self):
         """Calculate rating volatility (standard deviation of ratings)."""
-        return np.std(self.rating_history) if len(self.rating_history) > 1 else 0
+        if len(self.rating_history) <= 1:
+            return 0
+        # Extract just the ratings from (year, race_id, rating) tuples
+        ratings = [entry[2] for entry in self.rating_history]
+        return np.std(ratings)
         
     def get_career_span(self):
         """Calculate career span in years."""
         if self.first_year and self.last_year:
             return self.last_year - self.first_year
         return 0
+
+    def get_yearly_elo_progression(self, base_elo=1500):
+        """
+        Get end-of-year ELO ratings for each year of the driver's career.
+        
+        Returns:
+            list: List of (year, elo_rating) tuples
+        """
+        if not self.rating_history or self.first_year is None:
+            return []
+        
+        # Group ratings by year and get the last rating for each year
+        year_ratings = {}
+        for year, race_id, rating in self.rating_history:
+            if year is not None:
+                year_ratings[year] = rating  # Last rating in year wins
+        
+        # Fill in any missing years with interpolated/carried-over values
+        if not year_ratings:
+            return [(self.first_year, base_elo)]
+        
+        result = []
+        last_rating = base_elo
+        for year in range(self.first_year, self.last_year + 1):
+            if year in year_ratings:
+                last_rating = year_ratings[year]
+            result.append((year, last_rating))
+        
+        return result
+
+    def get_race_elo_progression(self):
+        """
+        Get ELO rating after each race (deduplicated by race_id).
+        
+        Returns:
+            list: List of (year, race_id, elo_rating) tuples, one per race
+        """
+        if not self.rating_history:
+            return []
+        
+        # Get the last rating update for each race
+        race_ratings = {}
+        for year, race_id, rating in self.rating_history:
+            if race_id is not None:
+                race_ratings[(year, race_id)] = rating
+        
+        # Sort by year and race_id
+        result = [(year, race_id, rating) 
+                  for (year, race_id), rating in sorted(race_ratings.items())]
+        return result
 
     def get_confidence_interval(self, confidence_calculator):
         """Calculate confidence interval using provided calculator."""
