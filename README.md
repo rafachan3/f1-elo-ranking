@@ -2,9 +2,9 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/release/python-3130/)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Ff1-elo-ranking-qfetoa1s0-rafachan3s-projects.vercel.app)](https://f1-elo-ranking-qfetoa1s0-rafachan3s-projects.vercel.app/)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Ff1-elo-ranking.vercel.app)](https://f1-elo-ranking.vercel.app/)
 
-A comprehensive Formula 1 driver ranking system that uses ELO ratings to evaluate true driver ability by isolating car performance. Check out the live website: [F1 ELO Rankings](https://f1-elo-ranking-qfetoa1s0-rafachan3s-projects.vercel.app/)
+A comprehensive Formula 1 driver ranking system that uses ELO ratings to evaluate true driver ability by isolating car performance. Check out the live website: [F1 ELO Rankings](https://f1-elo-ranking.vercel.app/)
 
 ## 📖 Table of Contents
 - [F1 Drivers ELO Rating 🏎️](#f1-drivers-elo-rating-️)
