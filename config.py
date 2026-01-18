@@ -4,6 +4,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def get_database_url():
+    """Get database URL with proper formatting for PostgreSQL."""
+    database_url = os.environ.get('DATABASE_URL', '')
+    
+    # Handle different PostgreSQL URL formats (Heroku uses postgres://)
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    
+    return database_url
+
+
 class Config:
     """Base configuration."""
     SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', 'dev-key-change-in-production')
@@ -30,15 +41,18 @@ class DevelopmentConfig(Config):
 
 
 class ProductionConfig(Config):
-    """Production configuration."""
+    """Production configuration for Vercel + Neon PostgreSQL."""
     DEBUG = False
     
-    # Handle Heroku's postgres:// vs postgresql:// URL
-    database_url = os.environ.get('DATABASE_URL', '')
-    if database_url.startswith('postgres://'):
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    # Get Neon PostgreSQL URL
+    SQLALCHEMY_DATABASE_URI = get_database_url() or 'sqlite:///f1-driver-elo-rankings.db'
     
-    SQLALCHEMY_DATABASE_URI = database_url or 'sqlite:///f1-driver-elo-rankings.db'
+    # SQLAlchemy engine options for Neon PostgreSQL
+    # Neon requires SSL and benefits from connection pooling settings
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,  # Verify connections before use
+        'pool_recycle': 300,    # Recycle connections after 5 minutes
+    }
 
 
 class TestingConfig(Config):
@@ -59,4 +73,3 @@ def get_config():
     """Get configuration based on FLASK_ENV environment variable."""
     env = os.environ.get('FLASK_ENV', 'development')
     return config.get(env, config['default'])
-

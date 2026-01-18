@@ -1,0 +1,43 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local SQLite database
+instance/
+*.db
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+htmlcov/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+LICENSE
+
+# Local development files
+.env
+.env.local
+
+# Heroku files (not needed for Vercel)
+Procfile
+runtime.txt
+
+# Seed script and update script (run locally, not on Vercel)
+seed_neon.py
+update_db.py
