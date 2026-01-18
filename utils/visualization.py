@@ -1,8 +1,11 @@
+"""
+Visualization utilities for creating Plotly charts.
+"""
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
-from plotly.subplots import make_subplots
 import numpy as np
+
 
 class DriverVisualizationUtils:
     """Utility class for creating driver-related visualizations."""
@@ -28,6 +31,7 @@ class DriverVisualizationUtils:
 
     def create_era_trends_chart(self, df):
         """Create line chart showing ELO trends by era."""
+        df = df.copy()
         df['era'] = (df['first_year'] // 10) * 10
         era_group = df.groupby('era').agg({'elo_rating': ['mean', 'max']}).reset_index()
         era_group.columns = ['Era', 'Average ELO', 'Top ELO']
@@ -204,6 +208,7 @@ class DriverVisualizationUtils:
         """Create a multi-line chart showing ELO progression by team."""
         if 'elo_rating' not in team_data.columns:
             # Create a basic ELO progression if elo_rating is missing
+            team_data = team_data.copy()
             team_data['elo_rating'] = team_data.groupby('team').cumcount() + 1500
 
         # Group data by team and year
@@ -282,19 +287,20 @@ class DriverVisualizationUtils:
                     
                     # Calculate average ELO difference
                     elo_differences = common_races['elo_rating_driver'] - common_races['elo_rating_teammate']
-                    avg_elo_diff = round(float(elo_differences.mean()), 1)  # Round to 1 decimal place
+                    avg_elo_diff = round(float(elo_differences.mean()), 1)
                     
                     comparisons.append({
                         'teammate': teammate_races['driverRef'].iloc[0],
                         'races': len(common_races),
                         'win_percentage': win_percentage,
-                        'elo_diff': avg_elo_diff if abs(avg_elo_diff) > 0.05 else 0.0  # Avoid -0.0 display
+                        'elo_diff': avg_elo_diff if abs(avg_elo_diff) > 0.05 else 0.0
                     })
 
         return sorted(comparisons, key=lambda x: x['races'], reverse=True)[:5]
 
     def create_era_performance_chart(self, driver_data):
         """Create a bar chart showing average ELO rating by era (decade)."""
+        driver_data = driver_data.copy()
         driver_data['decade'] = (driver_data['year'] // 10) * 10
         era_avg = driver_data.groupby('decade')['elo_rating'].mean().reset_index()
 

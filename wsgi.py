@@ -10,12 +10,14 @@ import os
 if not os.environ.get('FLASK_ENV'):
     os.environ['FLASK_ENV'] = 'production'
 
-from main import app, init_db
+from app import create_app
+from app.services import init_db
+
+# Create the Flask application
+app = create_app()
 
 # Initialize database when the application starts
-# This creates tables and populates data if needed
-with app.app_context():
-    init_db(app)
+init_db(app)
 
 if __name__ == "__main__":
     app.run()

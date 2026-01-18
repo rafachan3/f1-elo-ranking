@@ -1,8 +1,13 @@
+"""
+WTForms form definitions.
+"""
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, EmailField, SelectField, SubmitField
 from wtforms.validators import DataRequired, Email, Length
 
+
 class ContactForm(FlaskForm):
+    """Contact form for user inquiries."""
     name = StringField('Name', validators=[
         DataRequired(),
         Length(min=2, max=50, message="Name must be between 2 and 50 characters")

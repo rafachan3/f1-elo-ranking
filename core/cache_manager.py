@@ -1,9 +1,9 @@
 """
 Cache manager for expensive data processing operations.
+
 This module provides a singleton pattern for the F1DataProcessor to avoid
 reloading and reprocessing data on every request.
 """
-import os
 import threading
 from functools import lru_cache
 
@@ -28,7 +28,7 @@ class DataProcessorCache:
         if not self._initialized:
             with self._lock:
                 if not self._initialized:
-                    from data_processor import F1DataProcessor
+                    from core.data_processor import F1DataProcessor
                     self._processor = F1DataProcessor()
                     self._processor.load_data()
                     self._processor.process_races()
@@ -71,4 +71,3 @@ def get_race_count():
     """Get cached count of races (called frequently on home page)."""
     processor = get_cached_processor()
     return len(processor.races)
-

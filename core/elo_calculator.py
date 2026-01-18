@@ -1,6 +1,16 @@
+"""
+ELO rating calculator for F1 drivers.
+"""
+
+
 class EloCalculator:
     """
     Calculator for Formula 1 driver ELO ratings with configurable parameters.
+    
+    The ELO system is adapted for F1 with:
+    - Higher K-factors than chess due to F1's higher variability
+    - Era-specific adjustments for data reliability
+    - Season length normalization
     """
     
     # Base ELO parameters
@@ -104,4 +114,3 @@ class EloCalculator:
             float: The new ELO rating
         """
         return rating + k_factor * (actual - expected)
-

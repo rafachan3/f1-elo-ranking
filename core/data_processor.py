@@ -1,16 +1,30 @@
+"""
+F1 data processor for loading and processing race data.
+"""
 import pandas as pd
 from itertools import combinations
-from driver import Driver
-from elo_calculator import EloCalculator
-from confidence_calculator import ConfidenceCalculator
+
+from core.driver import Driver
+from core.elo_calculator import EloCalculator
+from core.confidence_calculator import ConfidenceCalculator
+
 
 class F1DataProcessor:
+    """
+    Processes F1 race data and calculates ELO ratings for all drivers.
+    
+    This class handles:
+    - Loading CSV data files
+    - Processing race results
+    - Calculating pairwise ELO updates for teammates
+    - Generating driver rankings
+    """
+    
     def __init__(self):
         self.elo_calculator = EloCalculator()
         self.confidence_calculator = ConfidenceCalculator()
         self.drivers_dict = {}
         self.status_mapping = {}
-
 
         # Define absolute non-start status IDs
         self.non_start_status_ids = {
@@ -29,10 +43,16 @@ class F1DataProcessor:
             54,  # Withdrew
         }
 
-        # Define Indianapolis 500 race IDs
+        # Define Indianapolis 500 race IDs (not part of F1 championship)
         self.indy_500_race_ids = {748, 757, 768, 778, 786, 794, 800, 809, 818, 826, 835}
         
     def load_data(self, data_path='./data'):
+        """
+        Load all CSV data files.
+        
+        Args:
+            data_path: Path to directory containing CSV files
+        """
         self.circuits = pd.read_csv(f'{data_path}/circuits.csv')
         self.constructors = pd.read_csv(f'{data_path}/constructors.csv')
         self.drivers = pd.read_csv(f'{data_path}/drivers.csv')
@@ -42,6 +62,7 @@ class F1DataProcessor:
         self.sprint_results = pd.read_csv(f'{data_path}/sprint_results.csv')
         self.status = pd.read_csv(f'{data_path}/status.csv')
 
+        # Exclude Indianapolis 500 races
         self.races = self.races[self.races['name'] != 'Indianapolis 500']
 
         # Initialize driver objects
@@ -102,6 +123,7 @@ class F1DataProcessor:
         return pd.DataFrame(columns=['year', 'driverId', 'elo_rating'])
 
     def process_races(self):
+        """Process all races and update ELO ratings."""
         races_sorted = self.races.sort_values(by=["year", "round"])
         race_results = self.results[['raceId', 'driverId', 'constructorId', 'positionOrder', 'statusId', 'grid', 'position', 'laps']]
 
@@ -160,6 +182,7 @@ class F1DataProcessor:
                     self._process_driver_pair(row_a, row_b, race_year, season_races)
 
     def _process_driver_pair(self, row_a, row_b, race_year, season_races):
+        """Process a pairwise ELO update between two teammates."""
         driver_a = self.drivers_dict[row_a.driverId]
         driver_b = self.drivers_dict[row_b.driverId]
 
@@ -205,6 +228,7 @@ class F1DataProcessor:
         driver_b.update_rating(new_rating_b)
 
     def calculate_rankings(self):
+        """Calculate final rankings for all drivers."""
         final_stats = []
         confidence_widths = []
 

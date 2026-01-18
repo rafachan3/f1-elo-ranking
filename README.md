@@ -2,24 +2,30 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/release/python-3130/)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Ff1-elo-ranking.onrender.com)](https://f1-elo-ranking.onrender.com/)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Ff1-elo-ranking-qfetoa1s0-rafachan3s-projects.vercel.app)](https://f1-elo-ranking-qfetoa1s0-rafachan3s-projects.vercel.app/)
 
-A comprehensive Formula 1 driver ranking system that uses ELO ratings to evaluate true driver ability by isolating car performance. Check out the live website: [F1 ELO Rankings](https://f1-elo-ranking.onrender.com/)
+A comprehensive Formula 1 driver ranking system that uses ELO ratings to evaluate true driver ability by isolating car performance. Check out the live website: [F1 ELO Rankings](https://f1-elo-ranking-qfetoa1s0-rafachan3s-projects.vercel.app/)
 
 ## 📖 Table of Contents
-- [About](#about)
-- [Features](#features)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Environment Setup](#environment-setup)
-- [Usage](#usage)
-- [Development](#development)
-- [Contributing](#contributing)
-- [Roadmap](#roadmap)
-- [Known Issues](#known-issues)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
+- [F1 Drivers ELO Rating 🏎️](#f1-drivers-elo-rating-️)
+  - [📖 Table of Contents](#-table-of-contents)
+  - [About](#about)
+  - [Features](#features)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Environment Setup](#environment-setup)
+  - [Usage](#usage)
+  - [Project Structure](#project-structure)
+    - [VS Code Setup](#vs-code-setup)
+    - [Troubleshooting](#troubleshooting)
+  - [Development](#development)
+  - [Contributing](#contributing)
+    - [How to Contribute](#how-to-contribute)
+  - [Roadmap](#roadmap)
+  - [Known Issues](#known-issues)
+  - [License](#license)
+  - [Acknowledgments](#acknowledgments)
 
 ## About
 
@@ -108,10 +114,43 @@ print(secure_key)
 
 1. Start the development server:
 ```bash
-python main.py
+python run.py
 ```
 
 2. Visit [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser
+
+## Project Structure
+
+```
+F1-DRIVERS-ELO-RANKING/
+├── app/                      # Flask application package
+│   ├── __init__.py           # App factory and extensions
+│   ├── models.py             # SQLAlchemy database models
+│   ├── forms.py              # WTForms form definitions
+│   ├── services.py           # Database initialization services
+│   ├── context_processors.py # Template context processors
+│   └── routes/               # Flask route blueprints
+│       ├── main.py           # Home, search, methodology
+│       ├── rankings.py       # Rankings page
+│       ├── drivers.py        # Driver profiles, comparisons
+│       └── contact.py        # Contact form
+├── core/                     # Core ELO calculation logic
+│   ├── driver.py             # Driver entity class
+│   ├── elo_calculator.py     # ELO rating calculations
+│   ├── confidence_calculator.py # Confidence intervals
+│   ├── data_processor.py     # F1 data loading/processing
+│   └── cache_manager.py      # Data caching utilities
+├── utils/                    # Utility modules
+│   ├── visualization.py      # Plotly chart generators
+│   └── database.py           # Database helper functions
+├── data/                     # CSV data files
+├── templates/                # Jinja2 HTML templates
+├── static/                   # Static assets (CSS, JS)
+├── config.py                 # Flask configuration
+├── run.py                    # Development entry point
+├── wsgi.py                   # Production WSGI entry point
+└── api/index.py              # Vercel serverless entry point
+```
 
 ### VS Code Setup
 
@@ -141,7 +180,7 @@ python main.py
             "name": "Flask",
             "type": "python",
             "request": "launch",
-            "program": "main.py",
+            "program": "run.py",
             "console": "integratedTerminal"
         }
     ]

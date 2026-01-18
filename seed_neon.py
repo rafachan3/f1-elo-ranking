@@ -30,11 +30,15 @@ if not os.environ.get('DATABASE_URL'):
     print("\nOr create a .env file with the DATABASE_URL variable.")
     sys.exit(1)
 
-from main import (
-    app, db, populate_database, 
-    DriverEloRanking, DriverEloProgression, 
-    RaceResult, DriverTeamHistory, AppStats
+from app import create_app, db
+from app.models import (
+    DriverEloRanking, 
+    DriverEloProgression, 
+    RaceResult, 
+    DriverTeamHistory, 
+    AppStats
 )
+from app.services import populate_database
 
 
 def seed_database(force_rebuild=False):
@@ -43,6 +47,8 @@ def seed_database(force_rebuild=False):
     Args:
         force_rebuild: If True, clears all existing data before seeding.
     """
+    app = create_app()
+    
     with app.app_context():
         print(f"Connecting to database...")
         print(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI'][:50]}...")

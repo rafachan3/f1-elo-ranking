@@ -1,12 +1,22 @@
-import pandas as pd
-from flask_sqlalchemy import SQLAlchemy
+"""
+Database utility functions.
+"""
 from sqlalchemy import inspect
 
+
 def update_database_from_df(db, DriverEloRanking, df):
+    """
+    Update database from a pandas DataFrame.
+    
+    Args:
+        db: SQLAlchemy database instance
+        DriverEloRanking: The model class for driver rankings
+        df: DataFrame containing driver ranking data
+    """
     # Define column mapping between DataFrame and model
     column_mapping = {
         'Driver': 'driver',
-        'f1_driver_id': 'f1_driver_id',  # Changed from driver_id to f1_driver_id
+        'f1_driver_id': 'f1_driver_id',
         'Elo Rating': 'elo_rating',
         'Lower Bound': 'lower_bound',
         'Upper Bound': 'upper_bound',
@@ -28,13 +38,15 @@ def update_database_from_df(db, DriverEloRanking, df):
         # Convert DataFrame row to model column names
         record_data = {}
         for df_col, model_col in column_mapping.items():
-            if model_col in model_columns and df_col in row:  # Only include if column exists in model
+            if model_col in model_columns and df_col in row:
                 record_data[model_col] = row[df_col]
         
-        if not record_data.get('driver'):  # Skip if no driver name
+        if not record_data.get('driver'):
             continue
             
-        existing_record = db.session.query(DriverEloRanking).filter_by(driver=record_data['driver']).first()
+        existing_record = db.session.query(DriverEloRanking).filter_by(
+            driver=record_data['driver']
+        ).first()
         
         if existing_record:
             # Check if any values have changed
