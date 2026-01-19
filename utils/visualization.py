@@ -205,46 +205,205 @@ class DriverVisualizationUtils:
         return fig
 
     def create_team_elo_chart(self, team_data, driver_name):
-        """Create a multi-line chart showing ELO progression by team."""
+        """Create an enhanced chart showing ELO progression colored by team tenure."""
         if 'elo_rating' not in team_data.columns:
-            # Create a basic ELO progression if elo_rating is missing
             team_data = team_data.copy()
             team_data['elo_rating'] = team_data.groupby('team').cumcount() + 1500
 
-        # Group data by team and year
-        team_summary = team_data.groupby(['year', 'team'])['elo_rating'].mean().reset_index()
+        # F1 team colors - a curated palette for visual distinction
+        team_colors = {
+            # Current/Recent Teams
+            'Red Bull': '#3671C6',
+            'Ferrari': '#E8002D',
+            'Mercedes': '#27F4D2',
+            'McLaren': '#FF8000',
+            'Aston Martin': '#229971',
+            'Alpine F1 Team': '#FF87BC',
+            'Williams': '#64C4FF',
+            'RB F1 Team': '#6692FF',
+            'Sauber': '#52E252',
+            'Haas F1 Team': '#B6BABD',
+            # Historical Teams
+            'Lotus': '#FFD700',
+            'Brabham': '#2E8B57',
+            'Tyrrell': '#00008B',
+            'BRM': '#006400',
+            'Cooper': '#4169E1',
+            'Renault': '#FFE200',
+            'Jordan': '#FFD700',
+            'BAR': '#FFFFFF',
+            'Benetton': '#00D2BE',
+            'Ligier': '#0066CC',
+            'Minardi': '#000000',
+            'Arrows': '#FF6600',
+            'March': '#FF4500',
+            'Surtees': '#8B0000',
+            'Shadow': '#1C1C1C',
+            'Prost': '#1E90FF',
+            'Sauber': '#006F62',
+            'Jaguar': '#0A5C36',
+            'Toyota': '#CC0000',
+            'Honda': '#FFFFFF',
+            'Toro Rosso': '#1E41FF',
+            'Racing Point': '#F596C8',
+            'Force India': '#FF5F1F',
+            'Lotus F1': '#B6860E',
+            'Caterham': '#00994C',
+            'Marussia': '#6E0000',
+            'HRT': '#A49E8C',
+            'Virgin': '#C82D2D',
+            'Alfa Romeo': '#A50F2D',
+            'AlphaTauri': '#2B4562',
+        }
+        
+        # Generate distinct colors for unknown teams using a pleasing palette
+        default_palette = [
+            '#E63946', '#F4A261', '#2A9D8F', '#264653', '#E9C46A',
+            '#8338EC', '#3A86FF', '#06D6A0', '#EF476F', '#FFD166',
+            '#118AB2', '#073B4C', '#F72585', '#7209B7', '#560BAD'
+        ]
+        
+        # Sort data by year to create continuous timeline
+        team_data = team_data.sort_values('year').copy()
+        teams = team_data['team'].unique()
+        
+        # Assign colors to teams
+        color_map = {}
+        color_idx = 0
+        for team in teams:
+            # Try partial matching for team names
+            matched = False
+            for key, color in team_colors.items():
+                if key.lower() in team.lower() or team.lower() in key.lower():
+                    color_map[team] = color
+                    matched = True
+                    break
+            if not matched:
+                color_map[team] = default_palette[color_idx % len(default_palette)]
+                color_idx += 1
 
         fig = go.Figure()
         
-        for team in team_summary['team'].unique():
-            team_data_filtered = team_summary[team_summary['team'] == team].sort_values('year')
+        # Create grouped data by year and team
+        team_summary = team_data.groupby(['year', 'team'])['elo_rating'].mean().reset_index()
+        team_summary = team_summary.sort_values('year')
+        
+        # First, add a light background line showing the complete progression
+        all_years = team_summary.groupby('year')['elo_rating'].mean().reset_index()
+        fig.add_trace(go.Scatter(
+            x=all_years['year'],
+            y=all_years['elo_rating'],
+            mode='lines',
+            line=dict(color='rgba(150,150,150,0.3)', width=3),
+            name='Career Path',
+            hoverinfo='skip',
+            showlegend=False
+        ))
+        
+        # Add team-colored segments with shaded areas
+        for team in teams:
+            team_df = team_summary[team_summary['team'] == team].sort_values('year')
+            if team_df.empty:
+                continue
+                
+            color = color_map[team]
             
+            # Create RGB from hex for transparency
+            hex_color = color.lstrip('#')
+            if len(hex_color) == 6:
+                r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+            else:
+                r, g, b = 100, 100, 100
+            
+            # Add filled area under the line for this team
             fig.add_trace(go.Scatter(
-                x=team_data_filtered['year'],
-                y=team_data_filtered['elo_rating'],
+                x=list(team_df['year']) + list(team_df['year'][::-1]),
+                y=list(team_df['elo_rating']) + [team_summary['elo_rating'].min() - 20] * len(team_df),
+                fill='toself',
+                fillcolor=f'rgba({r},{g},{b},0.15)',
+                line=dict(width=0),
+                hoverinfo='skip',
+                showlegend=False
+            ))
+            
+            # Add the main line with markers for this team
+            fig.add_trace(go.Scatter(
+                x=team_df['year'],
+                y=team_df['elo_rating'],
                 mode='lines+markers',
                 name=team,
-                hovertemplate='%{text}<br>ELO: %{y:.0f}',
-                text=[f'{team} ({year})' for year in team_data_filtered['year']]
+                line=dict(color=color, width=3),
+                marker=dict(
+                    size=10,
+                    color=color,
+                    line=dict(width=2, color='white'),
+                    symbol='circle'
+                ),
+                hovertemplate=(
+                    f'<b>{team}</b><br>' +
+                    'Year: %{x}<br>' +
+                    'ELO: %{y:.0f}<extra></extra>'
+                )
             ))
+        
+        # Add team change indicators (vertical dashed lines)
+        year_teams = team_summary.groupby('year')['team'].first().reset_index()
+        team_changes = []
+        prev_team = None
+        for _, row in year_teams.iterrows():
+            if prev_team is not None and row['team'] != prev_team:
+                team_changes.append(row['year'])
+            prev_team = row['team']
+        
+        for change_year in team_changes:
+            fig.add_vline(
+                x=change_year - 0.5,
+                line=dict(color='rgba(100,100,100,0.4)', width=1, dash='dot'),
+                annotation_text='',
+            )
 
+        # Calculate y-axis range with padding
+        y_min = team_summary['elo_rating'].min()
+        y_max = team_summary['elo_rating'].max()
+        y_padding = (y_max - y_min) * 0.1 if y_max != y_min else 50
+        
         fig.update_layout(
-            title=f'ELO Rating by Team - {driver_name}',
+            title=dict(
+                text=f'<b>Career Journey by Team</b><br><sup>{driver_name}</sup>',
+                font=dict(size=16),
+                x=0.5,
+                xanchor='center'
+            ),
             xaxis_title='Year',
             yaxis_title='ELO Rating',
-            hovermode='x unified',
+            hovermode='closest',
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
+            legend=dict(
+                orientation='h',
+                yanchor='bottom',
+                y=1.02,
+                xanchor='center',
+                x=0.5,
+                bgcolor='rgba(255,255,255,0.8)',
+                bordercolor='rgba(0,0,0,0.1)',
+                borderwidth=1,
+                font=dict(size=11)
+            ),
             xaxis=dict(
                 showgrid=True,
                 gridwidth=1,
-                gridcolor='rgba(128,128,128,0.2)'
+                gridcolor='rgba(128,128,128,0.15)',
+                dtick=1 if len(team_summary['year'].unique()) <= 10 else 2,
+                tickangle=-45
             ),
             yaxis=dict(
                 showgrid=True,
                 gridwidth=1,
-                gridcolor='rgba(128,128,128,0.2)'
-            )
+                gridcolor='rgba(128,128,128,0.15)',
+                range=[y_min - y_padding, y_max + y_padding]
+            ),
+            margin=dict(t=80, b=60)
         )
         
         return fig

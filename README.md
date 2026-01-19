@@ -230,7 +230,6 @@ Planned features and improvements:
 - Season-specific ELO progression viewer
 - Constructor-based filtering and analysis
 - Driver photos and nationality information
-- Migration from CSV files to jolpica-f1 API integration
 - Enhanced database architecture
 - Improved visualization libraries
 - Enhanced dashboard with more insights
@@ -242,8 +241,6 @@ Planned features and improvements:
 - Minor race count discrepancies for some drivers due to differences between Kaggle dataset and official F1 records:
   - Michael Schumacher (+2 races)
   - Richie Ginther (+1 race)
-- Suboptimal "ELO Rating by Team" graph presentation
-- Slower load times for individual driver profiles
 
 ## License
 
