@@ -278,6 +278,14 @@ class DriverVisualizationUtils:
         yearly_data = yearly_elo.merge(primary_team_per_year, on='year', how='left')
         yearly_data = yearly_data.sort_values('year').reset_index(drop=True)
         
+        # Drop rows with missing team data (can occur when year exists in yearly_elo
+        # but not in primary_team_per_year due to NaN teams in source data)
+        yearly_data = yearly_data.dropna(subset=['team'])
+        
+        if yearly_data.empty:
+            # No valid team data available, return empty figure
+            return go.Figure()
+        
         # Get all unique teams in chronological order
         teams_in_order = list(yearly_data['team'].unique())
         
