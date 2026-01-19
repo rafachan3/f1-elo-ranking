@@ -69,10 +69,13 @@ class Driver:
         """
         Get end-of-year ELO ratings for each year of the driver's career.
         
+        Returns base ELO for drivers with valid career spans but no rating history
+        (e.g., drivers who competed but never had teammate comparisons).
+        
         Returns:
             list: List of (year, elo_rating) tuples
         """
-        if not self.rating_history or self.first_year is None:
+        if self.first_year is None or self.last_year is None:
             return []
         
         # Group ratings by year and get the last rating for each year
@@ -81,10 +84,7 @@ class Driver:
             if year is not None:
                 year_ratings[year] = rating  # Last rating in year wins
         
-        # Fill in any missing years with interpolated/carried-over values
-        if not year_ratings:
-            return [(self.first_year, base_elo)]
-        
+        # Build progression for all career years, using base_elo when no rating exists
         result = []
         last_rating = base_elo
         for year in range(self.first_year, self.last_year + 1):
