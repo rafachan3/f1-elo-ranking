@@ -205,7 +205,7 @@ class DriverVisualizationUtils:
         return fig
 
     def create_team_elo_chart(self, team_data, driver_name):
-        """Create a clean chart showing ELO progression with team tenure indicated by background bands."""
+        """Create a clean chart showing ELO progression as a continuous line colored by team."""
         if 'elo_rating' not in team_data.columns:
             team_data = team_data.copy()
             team_data['elo_rating'] = team_data.groupby('team').cumcount() + 1500
@@ -213,38 +213,37 @@ class DriverVisualizationUtils:
         # F1 team colors - a curated palette for visual distinction
         team_colors = {
             # Current/Recent Teams
-            'Red Bull': '#3671C6',
-            'Ferrari': '#E8002D',
-            'Mercedes': '#27F4D2',
-            'McLaren': '#FF8000',
-            'Aston Martin': '#229971',
-            'Alpine F1 Team': '#FF87BC',
-            'Williams': '#64C4FF',
-            'RB F1 Team': '#6692FF',
-            'Sauber': '#52E252',
+            'Red Bull': '#1E41FF',
+            'Ferrari': '#DC0000',
+            'Mercedes': '#00D2BE',
+            'McLaren': '#FF8700',
+            'Aston Martin': '#006F62',
+            'Alpine F1 Team': '#0090FF',
+            'Williams': '#005AFF',
+            'RB F1 Team': '#2B4562',
+            'Sauber': '#900000',
             'Haas F1 Team': '#B6BABD',
             # Historical Teams
-            'Lotus': '#FFD700',
+            'Lotus': '#C6A800',
             'Brabham': '#2E8B57',
             'Tyrrell': '#00008B',
             'BRM': '#006400',
             'Cooper': '#4169E1',
-            'Renault': '#FFE200',
-            'Jordan': '#FFD700',
-            'BAR': '#FFFFFF',
+            'Renault': '#FFF500',
+            'Jordan': '#EBC100',
+            'BAR': '#CCCCCC',
             'Benetton': '#00D2BE',
             'Ligier': '#0066CC',
-            'Minardi': '#000000',
+            'Minardi': '#191919',
             'Arrows': '#FF6600',
             'March': '#FF4500',
             'Surtees': '#8B0000',
             'Shadow': '#1C1C1C',
             'Prost': '#1E90FF',
-            'Sauber': '#006F62',
             'Jaguar': '#0A5C36',
             'Toyota': '#CC0000',
-            'Honda': '#FFFFFF',
-            'Toro Rosso': '#1E41FF',
+            'Honda': '#CCCCCC',
+            'Toro Rosso': '#469BFF',
             'Racing Point': '#F596C8',
             'Force India': '#FF5F1F',
             'Lotus F1': '#B6860E',
@@ -252,40 +251,40 @@ class DriverVisualizationUtils:
             'Marussia': '#6E0000',
             'HRT': '#A49E8C',
             'Virgin': '#C82D2D',
-            'Alfa Romeo': '#A50F2D',
+            'Alfa Romeo': '#900000',
             'AlphaTauri': '#2B4562',
+            'Maserati': '#9B111E',
         }
         
-        # Generate distinct colors for unknown teams using a pleasing palette
+        # Generate distinct colors for unknown teams
         default_palette = [
             '#E63946', '#F4A261', '#2A9D8F', '#264653', '#E9C46A',
             '#8338EC', '#3A86FF', '#06D6A0', '#EF476F', '#FFD166',
             '#118AB2', '#073B4C', '#F72585', '#7209B7', '#560BAD'
         ]
         
-        # Sort data by year to create continuous timeline
+        # Sort data by year
         team_data = team_data.sort_values('year').copy()
-        
-        # Create grouped data by year - get average ELO and primary team per year
-        team_summary = team_data.groupby(['year', 'team'])['elo_rating'].mean().reset_index()
-        team_summary = team_summary.sort_values('year')
         
         # Get the primary team for each year (the one with most races that year)
         year_team_counts = team_data.groupby(['year', 'team']).size().reset_index(name='race_count')
         primary_team_per_year = year_team_counts.loc[year_team_counts.groupby('year')['race_count'].idxmax()]
         primary_team_per_year = primary_team_per_year[['year', 'team']].sort_values('year')
         
-        # Get all unique teams in chronological order of first appearance
-        teams_in_order = []
-        for _, row in primary_team_per_year.iterrows():
-            if row['team'] not in teams_in_order:
-                teams_in_order.append(row['team'])
+        # Get average ELO per year
+        yearly_elo = team_data.groupby('year')['elo_rating'].mean().reset_index().sort_values('year')
+        
+        # Merge to get team info per year
+        yearly_data = yearly_elo.merge(primary_team_per_year, on='year', how='left')
+        yearly_data = yearly_data.sort_values('year').reset_index(drop=True)
+        
+        # Get all unique teams in chronological order
+        teams_in_order = list(yearly_data['team'].unique())
         
         # Assign colors to teams
         color_map = {}
         color_idx = 0
         for team in teams_in_order:
-            # Try partial matching for team names
             matched = False
             for key, color in team_colors.items():
                 if key.lower() in team.lower() or team.lower() in key.lower():
@@ -297,86 +296,57 @@ class DriverVisualizationUtils:
                 color_idx += 1
 
         # Calculate y-axis range with padding
-        y_min = team_summary['elo_rating'].min()
-        y_max = team_summary['elo_rating'].max()
-        y_padding = (y_max - y_min) * 0.15 if y_max != y_min else 50
+        y_min = yearly_data['elo_rating'].min()
+        y_max = yearly_data['elo_rating'].max()
+        y_padding = (y_max - y_min) * 0.12 if y_max != y_min else 50
         
         fig = go.Figure()
         
-        # Identify team tenure periods (consecutive years with same primary team)
-        tenure_periods = []
-        current_team = None
-        start_year = None
+        # Build the career as connected segments, each colored by team
+        # We'll draw line segments between consecutive years
+        years = yearly_data['year'].tolist()
+        elos = yearly_data['elo_rating'].tolist()
+        teams = yearly_data['team'].tolist()
         
-        for _, row in primary_team_per_year.iterrows():
-            if row['team'] != current_team:
-                if current_team is not None:
-                    tenure_periods.append({
-                        'team': current_team,
-                        'start': start_year,
-                        'end': prev_year
-                    })
-                current_team = row['team']
-                start_year = row['year']
-            prev_year = row['year']
+        # Track which teams we've added to legend
+        teams_in_legend = set()
         
-        # Add the last tenure period
-        if current_team is not None:
-            tenure_periods.append({
-                'team': current_team,
-                'start': start_year,
-                'end': prev_year
-            })
-        
-        # Add vertical background bands for each team tenure (non-overlapping)
-        for tenure in tenure_periods:
-            color = color_map[tenure['team']]
-            hex_color = color.lstrip('#')
-            if len(hex_color) == 6:
-                r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
-            else:
-                r, g, b = 100, 100, 100
+        # Draw connecting line segments between consecutive points
+        for i in range(len(years) - 1):
+            year_start = years[i]
+            year_end = years[i + 1]
+            elo_start = elos[i]
+            elo_end = elos[i + 1]
+            team = teams[i]  # Color by the starting point's team
+            color = color_map.get(team, '#888888')
             
-            # Add vertical rectangle for this tenure period
-            fig.add_vrect(
-                x0=tenure['start'] - 0.5,
-                x1=tenure['end'] + 0.5,
-                fillcolor=f'rgba({r},{g},{b},0.12)',
-                layer='below',
-                line_width=0,
-            )
-        
-        # Add team-colored line segments connecting to show career flow
-        all_years_elo = team_summary.groupby('year')['elo_rating'].mean().reset_index().sort_values('year')
-        
-        # Add a subtle connecting line showing overall progression
-        fig.add_trace(go.Scatter(
-            x=all_years_elo['year'],
-            y=all_years_elo['elo_rating'],
-            mode='lines',
-            line=dict(color='rgba(150,150,150,0.4)', width=2),
-            name='Career Path',
-            hoverinfo='skip',
-            showlegend=False
-        ))
-        
-        # Add team-colored line segments with markers
-        for team in teams_in_order:
-            team_df = team_summary[team_summary['team'] == team].sort_values('year')
-            if team_df.empty:
-                continue
-                
-            color = color_map[team]
+            # Only show in legend once per team
+            show_legend = team not in teams_in_legend
+            if show_legend:
+                teams_in_legend.add(team)
             
-            # Add the main line with markers for this team
             fig.add_trace(go.Scatter(
-                x=team_df['year'],
-                y=team_df['elo_rating'],
-                mode='lines+markers',
+                x=[year_start, year_end],
+                y=[elo_start, elo_end],
+                mode='lines',
+                line=dict(color=color, width=4),
                 name=team,
-                line=dict(color=color, width=3),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+        
+        # Add markers for each year with hover info
+        for team in teams_in_order:
+            team_years = yearly_data[yearly_data['team'] == team]
+            color = color_map.get(team, '#888888')
+            
+            fig.add_trace(go.Scatter(
+                x=team_years['year'],
+                y=team_years['elo_rating'],
+                mode='markers',
+                name=team,
                 marker=dict(
-                    size=10,
+                    size=12,
                     color=color,
                     line=dict(width=2, color='white'),
                     symbol='circle'
@@ -385,12 +355,22 @@ class DriverVisualizationUtils:
                     f'<b>{team}</b><br>' +
                     'Year: %{x}<br>' +
                     'ELO: %{y:.0f}<extra></extra>'
-                )
+                ),
+                showlegend=True
             ))
+        
+        # Determine appropriate x-axis tick interval
+        year_span = max(years) - min(years) if years else 0
+        if year_span <= 8:
+            dtick = 1
+        elif year_span <= 15:
+            dtick = 2
+        else:
+            dtick = 5
         
         fig.update_layout(
             title=dict(
-                text=f'<b>Career Journey by Team</b><br><sup>{driver_name}</sup>',
+                text=f'<b>Career ELO by Team</b><br><sup>{driver_name}</sup>',
                 font=dict(size=16),
                 x=0.5,
                 xanchor='center'
@@ -406,7 +386,7 @@ class DriverVisualizationUtils:
                 y=1.02,
                 xanchor='center',
                 x=0.5,
-                bgcolor='rgba(255,255,255,0.8)',
+                bgcolor='rgba(255,255,255,0.9)',
                 bordercolor='rgba(0,0,0,0.1)',
                 borderwidth=1,
                 font=dict(size=11)
@@ -414,17 +394,17 @@ class DriverVisualizationUtils:
             xaxis=dict(
                 showgrid=True,
                 gridwidth=1,
-                gridcolor='rgba(128,128,128,0.15)',
-                dtick=2 if len(team_summary['year'].unique()) > 10 else 1,
+                gridcolor='rgba(128,128,128,0.2)',
+                dtick=dtick,
                 tickangle=0
             ),
             yaxis=dict(
                 showgrid=True,
                 gridwidth=1,
-                gridcolor='rgba(128,128,128,0.15)',
+                gridcolor='rgba(128,128,128,0.2)',
                 range=[y_min - y_padding, y_max + y_padding]
             ),
-            margin=dict(t=80, b=60)
+            margin=dict(t=80, b=50, l=60, r=30)
         )
         
         return fig
